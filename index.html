@@ -19,12 +19,13 @@
         #printable-qr-stand { position: absolute; left: 0; top: 0; width: 100%; }
       }
     </style>
+    <!-- Added 'htm' for safe JSX-like syntax -->
     <script type="importmap">
     {
       "imports": {
         "react": "https://esm.sh/react@18.2.0",
-        "react-dom": "https://esm.sh/react-dom@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "htm": "https://esm.sh/htm@3.1.1"
       }
     }
     </script>
@@ -39,14 +40,32 @@
       </div>
     </div>
 
+    <script>
+      // Show errors on screen if app crashes so you are not stuck on loading forever
+      window.addEventListener('error', function(e) {
+          const root = document.getElementById("root");
+          if (root && root.innerHTML.includes("Connecting")) {
+              root.innerHTML = `
+              <div style="padding: 20px; color: #991b1b; font-family: monospace; background: #fef2f2; height: 100vh; overflow: auto;">
+                  <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">⚠️ App Crashed</h3>
+                  <pre style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #fca5a5; white-space: pre-wrap;">${e.message}</pre>
+                  <p style="margin-top: 10px;">File: ${e.filename}:${e.lineno}:${e.colno}</p>
+                  <p style="margin-top: 20px; font-size: 12px; color: #7f1d1d;">कृपया पेज रिफ्रेश करा किंवा कोड तपासा.</p>
+              </div>`;
+          }
+      });
+    </script>
+
     <script type="module">
 import { createRoot } from "react-dom/client";
 import React, { useState, useEffect, useMemo } from "react";
+import htm from "htm";
+
+const html = htm.bind(React.createElement);
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
-  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, serverTimestamp
+  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 var firebaseConfig = {
@@ -79,20 +98,17 @@ function getDaysRemaining(dueDateStr) {
   if (!dueDateStr) return 0;
   return Math.ceil((new Date(dueDateStr).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 }
-
 function readLS(key, fallback) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; } }
 function writeLS(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 // ==========================================
-// ROOT APP
+// MAIN APP ROOT
 // ==========================================
-export default function App() {
+function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const urlRestId = queryParams.get("restId") || queryParams.get("restaurantId") || "rest-101";
   const urlTable = parseInt(queryParams.get("table") || "5", 10);
-  const isStaffInitial =
-    window.location.pathname.toLowerCase().replace(/\/+$/, "").endsWith("/staff") ||
-    queryParams.get("staff") === "true" || queryParams.get("view") === "staff";
+  const isStaffInitial = window.location.pathname.toLowerCase().replace(/\/+$/, "").endsWith("/staff") || queryParams.get("staff") === "true" || queryParams.get("view") === "staff";
 
   const [currentRestId, setCurrentRestId] = useState(urlRestId);
   const [currentTable, setCurrentTable] = useState(urlTable);
@@ -164,28 +180,26 @@ export default function App() {
     }
   };
 
-  return React.createElement("div", { className: "min-h-screen bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-100 selection:text-amber-900" },
-    currentView === "customer" && React.createElement(CustomerView, { restaurant: currentRestaurant, tableNumber: currentTable }),
-    currentView === "login" && React.createElement(PinLoginModal, {
-      restaurants, defaultRestId: currentRestId,
-      onSuccess: (session) => {
+  return html`
+    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-100 selection:text-amber-900">
+      ${currentView === "customer" && html`<${CustomerView} restaurant=${currentRestaurant} tableNumber=${currentTable} />`}
+      
+      ${currentView === "login" && html`<${PinLoginModal} restaurants=${restaurants} defaultRestId=${currentRestId} onSuccess=${(session) => {
         if (session.role === "admin") setCurrentView("admin");
         else if (session.role === "owner") { setCurrentRestId(session.restaurantId); setCurrentView("owner"); }
         else if (session.role === "kitchen") { setCurrentRestId(session.restaurantId); setCurrentView("kitchen"); }
-      },
-      onCancel: handleReturnToCustomer,
-    }),
-    currentView === "owner" && React.createElement(OwnerDashboard, { restaurant: currentRestaurant, onLogout: handleReturnToCustomer }),
-    currentView === "kitchen" && React.createElement(KitchenDashboard, { restaurant: currentRestaurant, onLogout: handleReturnToCustomer }),
-    currentView === "admin" && React.createElement(SuperAdminDashboard, {
-      restaurants, onRenew: handleRenewSubscription, onAddRestaurant: handleAddRestaurant,
-      onLogout: handleReturnToCustomer, setRestaurants
-    })
-  );
+      }} onCancel=${handleReturnToCustomer} />`}
+
+      ${currentView === "owner" && html`<${OwnerDashboard} restaurant=${currentRestaurant} onLogout=${handleReturnToCustomer} />`}
+      ${currentView === "kitchen" && html`<${KitchenDashboard} restaurant=${currentRestaurant} onLogout=${handleReturnToCustomer} />`}
+      
+      ${currentView === "admin" && html`<${SuperAdminDashboard} restaurants=${restaurants} onRenew=${handleRenewSubscription} onAddRestaurant=${handleAddRestaurant} onLogout=${handleReturnToCustomer} setRestaurants=${setRestaurants} />`}
+    </div>
+  `;
 }
 
 // ==========================================
-// CUSTOMER VIEW (Mobile-app feel with bottom nav)
+// CUSTOMER VIEW (Mobile App Feel)
 // ==========================================
 function CustomerView({ restaurant, tableNumber }) {
   const sp = new URLSearchParams(window.location.search);
@@ -206,7 +220,6 @@ function CustomerView({ restaurant, tableNumber }) {
   const [liveOrderStatus, setLiveOrderStatus] = useState(null);
   const [activeTab, setActiveTab] = useState("menu"); // menu | orders | info
   const [myOrders, setMyOrders] = useState(() => readLS(ORDERS_KEY, []));
-  const [showMyOrders, setShowMyOrders] = useState(false);
 
   const mapDoc = (id, data) => ({
     id: id || data.id,
@@ -341,241 +354,317 @@ function CustomerView({ restaurant, tableNumber }) {
   const statusColor = (s) => s === "PENDING" ? "bg-red-500" : s === "PREPARING" ? "bg-amber-500" : "bg-emerald-500";
   const statusLabel = (s) => s === "PENDING" ? "Received" : s === "PREPARING" ? "Preparing" : "Served";
 
-  return React.createElement("div", { className: "min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 pb-24" },
+  return html`
+    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 pb-24">
+      <!-- App Header -->
+      <header className="sticky top-0 z-30 bg-stone-50/90 backdrop-blur-xl border-b border-stone-200/60">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-base shadow-lg shadow-amber-500/20 shrink-0">
+              ${restaurant.name?.charAt(0) || "S"}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-black text-sm text-stone-900 truncate leading-tight">${restaurant.name}</h1>
+              <div className="flex items-center gap-1.5 text-[10px] text-stone-500 mt-0.5">
+                <span className="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200/60">Table ${tableNumber}</span>
+                <span className="truncate">• ${restaurant.tagline || "Digital Menu"}</span>
+              </div>
+            </div>
+          </div>
+          <button onClick=${() => setActiveTab(activeTab === "info" ? "menu" : "info")} className="w-9 h-9 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm shadow-sm active:scale-95 transition-transform">
+            ℹ️
+          </button>
+        </div>
+      </header>
 
-    // App-style header
-    React.createElement("header", { className: "sticky top-0 z-30 bg-stone-50/90 backdrop-blur-xl border-b border-stone-200/60" },
-      React.createElement("div", { className: "max-w-lg mx-auto px-4 py-3 flex items-center justify-between" },
-        React.createElement("div", { className: "flex items-center gap-2.5 min-w-0" },
-          React.createElement("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-base shadow-lg shadow-amber-500/20 shrink-0" },
-            restaurant.name?.charAt(0) || "S"),
-          React.createElement("div", { className: "min-w-0" },
-            React.createElement("h1", { className: "font-black text-sm text-stone-900 truncate leading-tight" }, restaurant.name),
-            React.createElement("div", { className: "flex items-center gap-1.5 text-[10px] text-stone-500 mt-0.5" },
-              React.createElement("span", { className: "font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200/60" }, `Table ${tableNumber}`),
-              React.createElement("span", { className: "truncate" }, "• " + (restaurant.tagline || "Digital Menu")))))
-        ,
-        React.createElement("button", {
-          onClick: () => setActiveTab(activeTab === "info" ? "menu" : "info"),
-          className: "w-9 h-9 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm shadow-sm active:scale-95 transition-transform"
-        }, "ℹ️")
-      )),
+      <!-- Live Order Tracker -->
+      ${liveOrderStatus && html`
+        <div className="max-w-lg mx-auto px-4 pt-3">
+          <div className="bg-stone-900 text-white rounded-2xl p-3.5 shadow-xl border border-amber-500/30 flex items-center justify-between gap-3 anim-slide-up">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400 flex items-center justify-center text-base shrink-0">📡</div>
+              <div className="min-w-0">
+                <div className="text-[9px] uppercase font-black tracking-widest text-amber-400">Live • ${liveOrderStatus.tokenNumber}</div>
+                <div className="text-xs font-black flex items-center gap-1.5 mt-0.5 truncate">
+                  <span className=${`w-2 h-2 rounded-full ${statusColor(liveOrderStatus.status)} animate-pulse`}></span>
+                  <span>${statusLabel(liveOrderStatus.status)} • ${liveOrderStatus.status}</span>
+                </div>
+              </div>
+            </div>
+            <button onClick=${() => setLiveOrderStatus(null)} className="text-[10px] bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg font-bold shrink-0">✕</button>
+          </div>
+        </div>
+      `}
 
-    // Live order tracker
-    liveOrderStatus && React.createElement("div", { className: "max-w-lg mx-auto px-4 pt-3" },
-      React.createElement("div", { className: "bg-stone-900 text-white rounded-2xl p-3.5 shadow-xl border border-amber-500/30 flex items-center justify-between gap-3 anim-slide-up" },
-        React.createElement("div", { className: "flex items-center gap-2.5 min-w-0" },
-          React.createElement("div", { className: "w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400 flex items-center justify-center text-base shrink-0" }, "📡"),
-          React.createElement("div", { className: "min-w-0" },
-            React.createElement("div", { className: "text-[9px] uppercase font-black tracking-widest text-amber-400" }, `Live • ${liveOrderStatus.tokenNumber}`),
-            React.createElement("div", { className: "text-xs font-black flex items-center gap-1.5 mt-0.5 truncate" },
-              React.createElement("span", { className: `w-2 h-2 rounded-full ${statusColor(liveOrderStatus.status)} animate-pulse` }),
-              React.createElement("span", null, statusLabel(liveOrderStatus.status) + " • " + liveOrderStatus.status)))),
-        React.createElement("button", { onClick: () => setLiveOrderStatus(null), className: "text-[10px] bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg font-bold shrink-0" }, "✕"))),
+      <!-- Menu Tab -->
+      ${activeTab === "menu" && html`
+        <div className="max-w-lg mx-auto px-4 pt-4">
+          <div className="bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 rounded-3xl p-5 text-white shadow-2xl relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-amber-500/20 blur-3xl"></div>
+            <div className="relative z-10">
+              <span className="inline-block bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">Contactless Dining</span>
+              <h2 className="text-xl font-black mt-2.5 tracking-tight leading-tight">Scan, Order & Enjoy!</h2>
+              <p className="text-[11px] text-stone-300 mt-1 leading-relaxed max-w-xs">Browse our chef-crafted menu and send your order to the kitchen.</p>
+              <div className="mt-3 inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15">
+                <span className="text-[9px] text-amber-300 uppercase tracking-widest font-bold">Seated at</span>
+                <span className="text-sm font-black font-mono">Table ${tableNumber}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    // MENU TAB
-    activeTab === "menu" && React.createElement(React.Fragment, null,
-      // Hero
-      React.createElement("div", { className: "max-w-lg mx-auto px-4 pt-4" },
-        React.createElement("div", { className: "bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 rounded-3xl p-5 text-white shadow-2xl relative overflow-hidden" },
-          React.createElement("div", { className: "absolute -top-10 -right-10 w-40 h-40 rounded-full bg-amber-500/20 blur-3xl" }),
-          React.createElement("div", { className: "relative z-10" },
-            React.createElement("span", { className: "inline-block bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full" }, "Contactless Dining"),
-            React.createElement("h2", { className: "text-xl font-black mt-2.5 tracking-tight leading-tight" }, "Scan, Order & Enjoy!"),
-            React.createElement("p", { className: "text-[11px] text-stone-300 mt-1 leading-relaxed max-w-xs" }, "Browse our chef-crafted menu and send your order to the kitchen."),
-            React.createElement("div", { className: "mt-3 inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15" },
-              React.createElement("span", { className: "text-[9px] text-amber-300 uppercase tracking-widest font-bold" }, "Seated at"),
-              React.createElement("span", { className: "text-sm font-black font-mono" }, `Table ${tableNumber}`))))),
+        <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
+          <div className="relative">
+            <span className="absolute left-3.5 top-3 text-stone-400 text-sm">🔍</span>
+            <input type="text" placeholder="Search dishes, drinks..." value=${searchQuery} onInput=${e => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-2xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm" />
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+            ${categories.map(cat => html`
+              <button key=${cat} onClick=${() => setSelectedCategory(cat)} className=${`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all whitespace-nowrap ${selectedCategory === cat ? "bg-stone-900 text-white shadow-md" : "bg-white border border-stone-200 text-stone-600"}`}>
+                ${cat}
+              </button>
+            `)}
+          </div>
+        </div>
 
-      // Search
-      React.createElement("div", { className: "max-w-lg mx-auto px-4 pt-4 space-y-3" },
-        React.createElement("div", { className: "relative" },
-          React.createElement("span", { className: "absolute left-3.5 top-3 text-stone-400 text-sm" }, "🔍"),
-          React.createElement("input", {
-            type: "text", placeholder: "Search dishes, drinks...",
-            value: searchQuery, onChange: e => setSearchQuery(e.target.value),
-            className: "w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-2xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
-          })),
-        React.createElement("div", { className: "flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1" },
-          categories.map(cat => React.createElement("button", {
-            key: cat, onClick: () => setSelectedCategory(cat),
-            className: `px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all whitespace-nowrap ${selectedCategory === cat ? "bg-stone-900 text-white shadow-md" : "bg-white border border-stone-200 text-stone-600"}`
-          }, cat)))),
+        <div className="max-w-lg mx-auto px-4 mt-4">
+          ${loading ? html`
+            <div className="py-16 text-center space-y-3">
+              <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-xs font-semibold text-stone-500">Loading menu...</p>
+            </div>
+          ` : filteredItems.length === 0 ? html`
+            <div className="p-10 text-center bg-white rounded-3xl border border-stone-200 space-y-2">
+              <span className="text-3xl">🍽️</span>
+              <h3 className="font-bold text-stone-800 text-sm">No dishes found</h3>
+              <p className="text-xs text-stone-500">Try adjusting your filters</p>
+            </div>
+          ` : html`
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${filteredItems.map(item => {
+                const inCart = cart.find(i => i.id === item.id);
+                const qty = inCart ? inCart.qty : 0;
+                return html`
+                  <div key=${item.id} className="bg-white rounded-2xl p-2.5 border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow flex gap-3 items-center active:scale-[0.99]">
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-stone-100 shrink-0">
+                      <img src=${item.imageUrl} alt=${item.name} className="w-full h-full object-cover" onError=${e => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; }} />
+                      ${item.tag && html`<span className="absolute top-1.5 left-1.5 bg-amber-500 text-stone-900 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full shadow">${item.tag}</span>`}
+                    </div>
+                    <div className="flex-1 min-w-0 py-0.5">
+                      <div className="flex items-start justify-between gap-1">
+                        <h3 className="font-black text-xs text-stone-900 truncate leading-tight">${item.name}</h3>
+                        <span className="text-xs font-extrabold text-amber-700 font-mono shrink-0">₹${Number(item.price).toFixed(0)}</span>
+                      </div>
+                      <p className="text-[10px] text-stone-500 line-clamp-2 mt-0.5 leading-relaxed">${item.description}</p>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <div className="flex items-center gap-1.5 text-[9px] text-stone-400 font-medium">
+                          <span className=${`w-1.5 h-1.5 rounded-full ${item.isVegetarian ? "bg-emerald-500" : "bg-rose-500"}`}></span>
+                          <span>${item.isVegetarian ? "Veg" : "Non-Veg"}</span>
+                        </div>
+                        ${qty > 0 ? html`
+                          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg p-0.5">
+                            <button onClick=${() => updateQty(item.id, -1)} className="w-5 h-5 rounded-md bg-white text-stone-800 font-black text-[10px] flex items-center justify-center shadow-sm">−</button>
+                            <span className="font-black text-[10px] font-mono text-amber-900 min-w-[10px] text-center">${qty}</span>
+                            <button onClick=${() => updateQty(item.id, 1)} className="w-5 h-5 rounded-md bg-amber-600 text-white font-black text-[10px] flex items-center justify-center shadow-sm">+</button>
+                          </div>
+                        ` : html`
+                          <button onClick=${() => addToCart(item)} className="px-2.5 py-1 bg-stone-900 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold active:scale-95 transition-all">+ Add</button>
+                        `}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              })}
+            </div>
+          `}
+        </div>
+      `}
 
-      // Menu items
-      React.createElement("div", { className: "max-w-lg mx-auto px-4 mt-4" },
-        loading ? React.createElement("div", { className: "py-16 text-center space-y-3" },
-          React.createElement("div", { className: "w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" }),
-          React.createElement("p", { className: "text-xs font-semibold text-stone-500" }, "Loading menu..."))
-        : filteredItems.length === 0 ? React.createElement("div", { className: "p-10 text-center bg-white rounded-3xl border border-stone-200 space-y-2" },
-          React.createElement("span", { className: "text-3xl" }, "🍽️"),
-          React.createElement("h3", { className: "font-bold text-stone-800 text-sm" }, "No dishes found"),
-          React.createElement("p", { className: "text-xs text-stone-500" }, "Try adjusting your filters"))
-        : React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3" },
-          filteredItems.map(item => {
-            const inCart = cart.find(i => i.id === item.id);
-            const qty = inCart ? inCart.qty : 0;
-            return React.createElement("div", {
-              key: item.id,
-              className: "bg-white rounded-2xl p-2.5 border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow flex gap-3 items-center active:scale-[0.99]"
-            },
-              React.createElement("div", { className: "relative w-20 h-20 rounded-xl overflow-hidden bg-stone-100 shrink-0" },
-                React.createElement("img", {
-                  src: item.imageUrl, alt: item.name,
-                  className: "w-full h-full object-cover",
-                  onError: e => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; }
-                }),
-                item.tag && React.createElement("span", { className: "absolute top-1.5 left-1.5 bg-amber-500 text-stone-900 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full shadow" }, item.tag)),
-              React.createElement("div", { className: "flex-1 min-w-0 py-0.5" },
-                React.createElement("div", { className: "flex items-start justify-between gap-1" },
-                  React.createElement("h3", { className: "font-black text-xs text-stone-900 truncate leading-tight" }, item.name),
-                  React.createElement("span", { className: "text-xs font-extrabold text-amber-700 font-mono shrink-0" }, `₹${Number(item.price).toFixed(0)}`)),
-                React.createElement("p", { className: "text-[10px] text-stone-500 line-clamp-2 mt-0.5 leading-relaxed" }, item.description),
-                React.createElement("div", { className: "flex items-center justify-between mt-1.5" },
-                  React.createElement("div", { className: "flex items-center gap-1.5 text-[9px] text-stone-400 font-medium" },
-                    React.createElement("span", { className: `w-1.5 h-1.5 rounded-full ${item.isVegetarian ? "bg-emerald-500" : "bg-rose-500"}` }),
-                    React.createElement("span", null, item.isVegetarian ? "Veg" : "Non-Veg")),
-                  qty > 0 ? React.createElement("div", { className: "flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg p-0.5" },
-                    React.createElement("button", { onClick: () => updateQty(item.id, -1), className: "w-5 h-5 rounded-md bg-white text-stone-800 font-black text-[10px] flex items-center justify-center shadow-sm" }, "−"),
-                    React.createElement("span", { className: "font-black text-[10px] font-mono text-amber-900 min-w-[10px] text-center" }, qty),
-                    React.createElement("button", { onClick: () => updateQty(item.id, 1), className: "w-5 h-5 rounded-md bg-amber-600 text-white font-black text-[10px] flex items-center justify-center shadow-sm" }, "+"))
-                  : React.createElement("button", {
-                      onClick: () => addToCart(item),
-                      className: "px-2.5 py-1 bg-stone-900 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold active:scale-95 transition-all"
-                    }, "+ Add")))));
-          })))),
+      <!-- Orders Tab -->
+      ${activeTab === "orders" && html`
+        <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
+          <h2 className="font-black text-lg text-stone-900">My Orders</h2>
+          <p className="text-xs text-stone-500 -mt-2">All orders placed from Table ${tableNumber}</p>
+          
+          ${myOrders.length === 0 ? html`
+            <div className="p-10 text-center bg-white rounded-3xl border border-stone-200 space-y-2">
+              <span className="text-4xl">📋</span>
+              <h3 className="font-bold text-stone-800 text-sm">No orders yet</h3>
+              <p className="text-xs text-stone-500">Place your first order from the menu</p>
+            </div>
+          ` : myOrders.map(o => html`
+            <div key=${o.id} className="bg-white rounded-2xl p-3.5 border border-stone-200 shadow-sm">
+              <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                <span className="font-black text-amber-700 font-mono text-sm">${o.tokenNumber}</span>
+                <span className=${`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${o.status === "COMPLETED" ? "bg-emerald-100 text-emerald-800" : o.status === "PREPARING" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>${o.status}</span>
+              </div>
+              <div className="mt-2 space-y-1">
+                ${o.items.map((i, idx) => html`
+                  <div key=${idx} className="flex justify-between text-[11px] text-stone-600">
+                    <span>${i.qty}× ${i.name}</span>
+                    <span className="font-mono">₹${(i.price * i.qty).toFixed(0)}</span>
+                  </div>
+                `)}
+              </div>
+              <div className="mt-2 pt-2 border-t border-stone-100 flex justify-between text-xs font-black text-stone-900">
+                <span>Total</span>
+                <span className="font-mono text-amber-700">₹${o.totalAmount.toFixed(0)}</span>
+              </div>
+            </div>
+          `)}
+        </div>
+      `}
 
-    // ORDERS TAB
-    activeTab === "orders" && React.createElement("div", { className: "max-w-lg mx-auto px-4 pt-4 space-y-3" },
-      React.createElement("h2", { className: "font-black text-lg text-stone-900" }, "My Orders"),
-      React.createElement("p", { className: "text-xs text-stone-500 -mt-2" }, "All orders placed from Table " + tableNumber),
-      myOrders.length === 0 ? React.createElement("div", { className: "p-10 text-center bg-white rounded-3xl border border-stone-200 space-y-2" },
-        React.createElement("span", { className: "text-4xl" }, "📋"),
-        React.createElement("h3", { className: "font-bold text-stone-800 text-sm" }, "No orders yet"),
-        React.createElement("p", { className: "text-xs text-stone-500" }, "Place your first order from the menu"))
-      : myOrders.map(o => React.createElement("div", { key: o.id, className: "bg-white rounded-2xl p-3.5 border border-stone-200 shadow-sm" },
-          React.createElement("div", { className: "flex items-center justify-between pb-2 border-b border-stone-100" },
-            React.createElement("span", { className: "font-black text-amber-700 font-mono text-sm" }, o.tokenNumber),
-            React.createElement("span", { className: `text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${o.status === "COMPLETED" ? "bg-emerald-100 text-emerald-800" : o.status === "PREPARING" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}` }, o.status)),
-          React.createElement("div", { className: "mt-2 space-y-1" },
-            o.items.map((i, idx) => React.createElement("div", { key: idx, className: "flex justify-between text-[11px] text-stone-600" },
-              React.createElement("span", null, i.qty + "× " + i.name),
-              React.createElement("span", { className: "font-mono" }, `₹${(i.price * i.qty).toFixed(0)}`)))),
-          React.createElement("div", { className: "mt-2 pt-2 border-t border-stone-100 flex justify-between text-xs font-black text-stone-900" },
-            React.createElement("span", null, "Total"),
-            React.createElement("span", { className: "font-mono text-amber-700" }, `₹${o.totalAmount.toFixed(0)}`))))),
+      <!-- Info Tab -->
+      ${activeTab === "info" && html`
+        <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
+          <h2 className="font-black text-lg text-stone-900">Restaurant Info</h2>
+          <div className="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-2xl shadow-lg mx-auto">
+              ${restaurant.name?.charAt(0) || "R"}
+            </div>
+            <div className="text-center">
+              <h3 className="font-black text-base text-stone-900">${restaurant.name}</h3>
+              <p className="text-xs text-stone-500 mt-0.5">${restaurant.tagline || "Digital QR Dining"}</p>
+            </div>
+            <div className="pt-3 border-t border-stone-100 space-y-2 text-xs">
+              <div className="flex justify-between"><span className="text-stone-500">Table</span><span className="font-bold">Table ${tableNumber}</span></div>
+              <div className="flex justify-between"><span className="text-stone-500">Restaurant ID</span><span className="font-mono text-stone-700">${restaurantId}</span></div>
+              <div className="flex justify-between"><span className="text-stone-500">Total Orders</span><span className="font-bold">${myOrders.length}</span></div>
+            </div>
+          </div>
+          <button onClick=${() => window.location.href = "/?view=staff"} className="w-full py-3 bg-stone-900 text-white rounded-2xl font-bold text-xs shadow-lg active:scale-[0.98] transition-transform">
+            🔐 Staff Login
+          </button>
+        </div>
+      `}
 
-    // INFO TAB
-    activeTab === "info" && React.createElement("div", { className: "max-w-lg mx-auto px-4 pt-4 space-y-3" },
-      React.createElement("h2", { className: "font-black text-lg text-stone-900" }, "Restaurant Info"),
-      React.createElement("div", { className: "bg-white rounded-2xl p-5 border border-stone-200 shadow-sm space-y-3" },
-        React.createElement("div", { className: "w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-2xl shadow-lg mx-auto" }, restaurant.name?.charAt(0) || "R"),
-        React.createElement("div", { className: "text-center" },
-          React.createElement("h3", { className: "font-black text-base text-stone-900" }, restaurant.name),
-          React.createElement("p", { className: "text-xs text-stone-500 mt-0.5" }, restaurant.tagline || "Digital QR Dining")),
-        React.createElement("div", { className: "pt-3 border-t border-stone-100 space-y-2 text-xs" },
-          React.createElement("div", { className: "flex justify-between" }, React.createElement("span", { className: "text-stone-500" }, "Table"), React.createElement("span", { className: "font-bold" }, "Table " + tableNumber)),
-          React.createElement("div", { className: "flex justify-between" }, React.createElement("span", { className: "text-stone-500" }, "Restaurant ID"), React.createElement("span", { className: "font-mono text-stone-700" }, restaurantId)),
-          React.createElement("div", { className: "flex justify-between" }, React.createElement("span", { className: "text-stone-500" }, "Total Orders"), React.createElement("span", { className: "font-bold" }, String(myOrders.length))))),
-      React.createElement("button", {
-        onClick: () => window.location.href = "/?view=staff",
-        className: "w-full py-3 bg-stone-900 text-white rounded-2xl font-bold text-xs shadow-lg active:scale-[0.98] transition-transform"
-      }, "🔐 Staff Login")),
+      <!-- Floating Cart -->
+      ${cartCount > 0 && activeTab === "menu" && html`
+        <div className="fixed bottom-24 left-4 right-4 max-w-lg mx-auto z-40 anim-slide-up">
+          <div onClick=${() => setIsCartOpen(true)} className="bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-2xl p-3 shadow-2xl flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform border border-stone-700/50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-900 font-black text-xs flex items-center justify-center">${cartCount}</div>
+              <div>
+                <span className="font-bold text-xs block">${cartCount} item${cartCount > 1 ? "s" : ""}</span>
+                <span className="text-[10px] text-stone-400 font-mono">₹${subtotal.toFixed(0)} subtotal</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-sm font-mono text-amber-400">₹${total.toFixed(0)}</span>
+              <span className="bg-amber-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">View Cart →</span>
+            </div>
+          </div>
+        </div>
+      `}
 
-    // Cart floating button
-    cartCount > 0 && activeTab === "menu" && React.createElement("div", { className: "fixed bottom-24 left-4 right-4 max-w-lg mx-auto z-40 anim-slide-up" },
-      React.createElement("div", {
-        onClick: () => setIsCartOpen(true),
-        className: "bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-2xl p-3 shadow-2xl flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform border border-stone-700/50"
-      },
-        React.createElement("div", { className: "flex items-center gap-2.5" },
-          React.createElement("div", { className: "w-8 h-8 rounded-xl bg-amber-500 text-stone-900 font-black text-xs flex items-center justify-center" }, cartCount),
-          React.createElement("div", null,
-            React.createElement("span", { className: "font-bold text-xs block" }, cartCount + " item" + (cartCount > 1 ? "s" : "")),
-            React.createElement("span", { className: "text-[10px] text-stone-400 font-mono" }, `₹${subtotal.toFixed(0)} subtotal`))),
-        React.createElement("div", { className: "flex items-center gap-2" },
-          React.createElement("span", { className: "font-black text-sm font-mono text-amber-400" }, `₹${total.toFixed(0)}`),
-          React.createElement("span", { className: "bg-amber-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold" }, "View Cart →")))),
+      <!-- Bottom Navigation -->
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 z-30 safe-bottom">
+        <div className="max-w-lg mx-auto grid grid-cols-3">
+          ${[
+            { id: "menu", icon: "🍽️", label: "Menu" },
+            { id: "orders", icon: "📋", label: "Orders" },
+            { id: "info", icon: "🏪", label: "Info" }
+          ].map(tab => html`
+            <button key=${tab.id} onClick=${() => setActiveTab(tab.id)} className=${`flex flex-col items-center gap-0.5 py-2.5 transition-colors relative ${activeTab === tab.id ? "text-amber-700" : "text-stone-400"}`}>
+              <span className="text-lg leading-none">${tab.icon}</span>
+              <span className="text-[10px] font-bold">${tab.label}</span>
+              ${tab.id === "orders" && myOrders.length > 0 && html`
+                <span className="absolute top-1 right-1/2 translate-x-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">${myOrders.length > 9 ? "9+" : myOrders.length}</span>
+              `}
+              ${activeTab === tab.id && html`<span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-amber-600 rounded-full"></span>`}
+            </button>
+          `)}
+        </div>
+      </nav>
 
-    // BOTTOM NAV (Mobile app-like)
-    React.createElement("nav", { className: "fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 z-30 safe-bottom" },
-      React.createElement("div", { className: "max-w-lg mx-auto grid grid-cols-3" },
-        [
-          { id: "menu", icon: "🍽️", label: "Menu" },
-          { id: "orders", icon: "📋", label: "Orders" },
-          { id: "info", icon: "🏪", label: "Info" }
-        ].map(tab => React.createElement("button", {
-          key: tab.id, onClick: () => setActiveTab(tab.id),
-          className: `flex flex-col items-center gap-0.5 py-2.5 transition-colors relative ${activeTab === tab.id ? "text-amber-700" : "text-stone-400"}`
-        },
-          React.createElement("span", { className: "text-lg leading-none" }, tab.icon),
-          React.createElement("span", { className: "text-[10px] font-bold" }, tab.label),
-          tab.id === "orders" && myOrders.length > 0 && React.createElement("span", { className: "absolute top-1 right-1/2 translate-x-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center" }, myOrders.length > 9 ? "9+" : myOrders.length),
-          activeTab === tab.id && React.createElement("span", { className: "absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-amber-600 rounded-full" }))))),
+      <!-- Cart Sheet -->
+      ${isCartOpen && html`
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
+          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col anim-slide-up">
+            <div className="p-4 border-b border-stone-200 flex justify-between items-center">
+              <div>
+                <h2 className="font-black text-lg text-stone-900">Your Cart</h2>
+                <p className="text-xs text-stone-500">${restaurant.name} • Table ${tableNumber}</p>
+              </div>
+              <button onClick=${() => setIsCartOpen(false)} className="w-8 h-8 rounded-full bg-stone-100 text-stone-600 text-sm font-bold flex items-center justify-center">✕</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              ${cart.length === 0 ? html`
+                <div className="py-20 text-center space-y-2">
+                  <span className="text-4xl">🛒</span>
+                  <p className="text-stone-700 font-bold text-sm">Cart is empty</p>
+                  <p className="text-xs text-stone-400">Add dishes to place an order</p>
+                </div>
+              ` : cart.map(item => html`
+                <div key=${item.id} className="flex justify-between items-center bg-stone-50 p-3 rounded-2xl border border-stone-200 text-xs">
+                  <div className="flex-1 min-w-0 pr-3">
+                    <h4 className="font-bold text-stone-900 truncate">${item.name}</h4>
+                    <p className="font-mono font-bold text-amber-700 text-[11px]">₹${(item.price * item.qty).toFixed(0)}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white border border-stone-200 rounded-xl p-0.5">
+                    <button onClick=${() => updateQty(item.id, -1)} className="w-6 h-6 rounded-lg bg-stone-100 text-stone-800 font-black text-xs flex items-center justify-center">−</button>
+                    <span className="font-black text-xs font-mono text-stone-900 px-1">${item.qty}</span>
+                    <button onClick=${() => updateQty(item.id, 1)} className="w-6 h-6 rounded-lg bg-amber-600 text-white font-black text-xs flex items-center justify-center">+</button>
+                  </div>
+                </div>
+              `)}
+              
+              ${cart.length > 0 && html`
+                <div className="pt-2">
+                  <label className="text-xs font-bold text-stone-700 block mb-1">Special Instructions</label>
+                  <textarea rows="2" placeholder="e.g. Extra spicy, no onions..." value=${specialInstructions} onInput=${e => setSpecialInstructions(e.target.value)} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"></textarea>
+                </div>
+              `}
+            </div>
 
-    // CART SHEET
-    isCartOpen && React.createElement("div", { className: "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end" },
-      React.createElement("div", { className: "bg-white w-full max-w-md h-full shadow-2xl flex flex-col anim-slide-up" },
-        React.createElement("div", { className: "p-4 border-b border-stone-200 flex justify-between items-center" },
-          React.createElement("div", null,
-            React.createElement("h2", { className: "font-black text-lg text-stone-900" }, "Your Cart"),
-            React.createElement("p", { className: "text-xs text-stone-500" }, restaurant.name + " • Table " + tableNumber)),
-          React.createElement("button", { onClick: () => setIsCartOpen(false), className: "w-8 h-8 rounded-full bg-stone-100 text-stone-600 text-sm font-bold flex items-center justify-center" }, "✕")),
-        React.createElement("div", { className: "flex-1 overflow-y-auto p-4 space-y-3" },
-          cart.length === 0 ? React.createElement("div", { className: "py-20 text-center space-y-2" },
-            React.createElement("span", { className: "text-4xl" }, "🛒"),
-            React.createElement("p", { className: "text-stone-700 font-bold text-sm" }, "Cart is empty"),
-            React.createElement("p", { className: "text-xs text-stone-400" }, "Add dishes to place an order"))
-          : cart.map(item => React.createElement("div", { key: item.id, className: "flex justify-between items-center bg-stone-50 p-3 rounded-2xl border border-stone-200 text-xs" },
-              React.createElement("div", { className: "flex-1 min-w-0 pr-3" },
-                React.createElement("h4", { className: "font-bold text-stone-900 truncate" }, item.name),
-                React.createElement("p", { className: "font-mono font-bold text-amber-700 text-[11px]" }, `₹${(item.price * item.qty).toFixed(0)}`)),
-              React.createElement("div", { className: "flex items-center gap-1.5 bg-white border border-stone-200 rounded-xl p-0.5" },
-                React.createElement("button", { onClick: () => updateQty(item.id, -1), className: "w-6 h-6 rounded-lg bg-stone-100 text-stone-800 font-black text-xs flex items-center justify-center" }, "−"),
-                React.createElement("span", { className: "font-black text-xs font-mono text-stone-900 px-1" }, item.qty),
-                React.createElement("button", { onClick: () => updateQty(item.id, 1), className: "w-6 h-6 rounded-lg bg-amber-600 text-white font-black text-xs flex items-center justify-center" }, "+")))),
-          cart.length > 0 && React.createElement("div", { className: "pt-2" },
-            React.createElement("label", { className: "text-xs font-bold text-stone-700 block mb-1" }, "Special Instructions"),
-            React.createElement("textarea", {
-              rows: "2", placeholder: "e.g. Extra spicy, no onions...",
-              value: specialInstructions, onChange: e => setSpecialInstructions(e.target.value),
-              className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
-            }))),
-        cart.length > 0 && React.createElement("div", { className: "p-4 border-t border-stone-200 space-y-3 bg-stone-50" },
-          React.createElement("div", { className: "space-y-1 text-xs text-stone-600" },
-            React.createElement("div", { className: "flex justify-between" }, React.createElement("span", null, "Subtotal"), React.createElement("span", { className: "font-mono font-bold" }, `₹${subtotal.toFixed(0)}`)),
-            React.createElement("div", { className: "flex justify-between" }, React.createElement("span", null, "Tax (5%)"), React.createElement("span", { className: "font-mono font-bold" }, `₹${tax.toFixed(0)}`)),
-            React.createElement("div", { className: "flex justify-between text-sm font-black text-stone-900 pt-1.5 border-t border-stone-200" }, React.createElement("span", null, "Total"), React.createElement("span", { className: "font-mono text-amber-700" }, `₹${total.toFixed(0)}`))),
-          React.createElement("button", {
-            onClick: handlePlaceOrder, disabled: isOrderSubmitting,
-            className: "w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-700 disabled:from-stone-300 disabled:to-stone-300 text-white font-black text-sm rounded-2xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-          }, isOrderSubmitting ? React.createElement(React.Fragment, null,
-            React.createElement("span", { className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" }),
-            "Sending...") : `Place Order • ₹${total.toFixed(0)}`))))),
+            ${cart.length > 0 && html`
+              <div className="p-4 border-t border-stone-200 space-y-3 bg-stone-50">
+                <div className="space-y-1 text-xs text-stone-600">
+                  <div className="flex justify-between"><span>Subtotal</span><span className="font-mono font-bold">₹${subtotal.toFixed(0)}</span></div>
+                  <div className="flex justify-between"><span>Tax (5%)</span><span className="font-mono font-bold">₹${tax.toFixed(0)}</span></div>
+                  <div className="flex justify-between text-sm font-black text-stone-900 pt-1.5 border-t border-stone-200"><span>Total</span><span className="font-mono text-amber-700">₹${total.toFixed(0)}</span></div>
+                </div>
+                <button onClick=${handlePlaceOrder} disabled=${isOrderSubmitting} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-700 disabled:from-stone-300 disabled:to-stone-300 text-white font-black text-sm rounded-2xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                  ${isOrderSubmitting ? html`<span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Sending...` : `Place Order • ₹${total.toFixed(0)}`}
+                </button>
+              </div>
+            `}
+          </div>
+        </div>
+      `}
 
-    // SUCCESS MODAL
-    showSuccessModal && placedOrder && React.createElement("div", { className: "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" },
-      React.createElement("div", { className: "bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4 anim-slide-up" },
-        React.createElement("div", { className: "w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-xl shadow-emerald-500/30" }, "✓"),
-        React.createElement("div", null,
-          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full" }, "Order Placed!"),
-          React.createElement("h2", { className: "text-2xl font-black text-stone-900 mt-2 font-mono" }, placedOrder.tokenNumber),
-          React.createElement("p", { className: "text-xs text-stone-500 mt-1" }, "Table " + placedOrder.tableNumber + " • " + restaurant.name)),
-        React.createElement("div", { className: "bg-stone-50 rounded-2xl p-3 border border-stone-200 text-xs space-y-1.5 text-left" },
-          React.createElement("div", { className: "font-bold text-stone-800 border-b border-stone-200 pb-1.5 flex justify-between text-[11px]" },
-            React.createElement("span", null, "Summary"),
-            React.createElement("span", { className: "font-mono text-amber-700" }, `₹${placedOrder.totalAmount.toFixed(0)}`)),
-          placedOrder.items.map((i, idx) => React.createElement("div", { key: idx, className: "flex justify-between text-stone-600 text-[11px]" },
-            React.createElement("span", null, i.qty + "× " + i.name),
-            React.createElement("span", { className: "font-mono" }, `₹${(i.price * i.qty).toFixed(0)}`)))),
-        React.createElement("button", {
-          onClick: () => setShowSuccessModal(false),
-          className: "w-full py-3 bg-stone-900 text-white font-bold text-xs rounded-xl active:scale-[0.98] transition-transform"
-        }, "Close")));
+      <!-- Success Modal -->
+      ${showSuccessModal && placedOrder && html`
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4 anim-slide-up">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-xl shadow-emerald-500/30">✓</div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">Order Placed!</span>
+              <h2 className="text-2xl font-black text-stone-900 mt-2 font-mono">${placedOrder.tokenNumber}</h2>
+              <p className="text-xs text-stone-500 mt-1">Table ${placedOrder.tableNumber} • ${restaurant.name}</p>
+            </div>
+            <div className="bg-stone-50 rounded-2xl p-3 border border-stone-200 text-xs space-y-1.5 text-left">
+              <div className="font-bold text-stone-800 border-b border-stone-200 pb-1.5 flex justify-between text-[11px]">
+                <span>Summary</span><span className="font-mono text-amber-700">₹${placedOrder.totalAmount.toFixed(0)}</span>
+              </div>
+              ${placedOrder.items.map((i, idx) => html`
+                <div key=${idx} className="flex justify-between text-stone-600 text-[11px]">
+                  <span>${i.qty}× ${i.name}</span><span className="font-mono">₹${(i.price * i.qty).toFixed(0)}</span>
+                </div>
+              `)}
+            </div>
+            <button onClick=${() => setShowSuccessModal(false)} className="w-full py-3 bg-stone-900 text-white font-bold text-xs rounded-xl active:scale-[0.98] transition-transform">Close</button>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
 }
 
 // ==========================================
-// KITCHEN DASHBOARD — NO SCROLL, Compact, Fits everything
+// KITCHEN DASHBOARD (NO SCROLL)
 // ==========================================
 function KitchenDashboard({ restaurant, onLogout }) {
   const [orders, setOrders] = useState([]);
@@ -646,86 +735,88 @@ function KitchenDashboard({ restaurant, onLogout }) {
   const preparing = orders.filter(o => o.status === "PREPARING");
   const completed = orders.filter(o => o.status === "COMPLETED");
 
-  return React.createElement("div", { className: "h-screen bg-stone-950 text-stone-100 flex flex-col overflow-hidden font-sans" },
+  return html`
+    <div className="h-screen bg-stone-950 text-stone-100 flex flex-col overflow-hidden font-sans">
+      <header className="shrink-0 px-4 py-2 border-b border-stone-800/80 bg-stone-900/50 backdrop-blur flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-sm shrink-0">🍳</div>
+          <div className="min-w-0">
+            <h1 className="text-sm font-black text-white truncate leading-tight">Kitchen Display</h1>
+            <p className="text-[10px] text-stone-500 truncate">${restaurant.name}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="text-right hidden sm:block">
+            <div className="text-[9px] text-stone-500 uppercase tracking-wider font-bold">LIVE</div>
+            <div className="text-xs font-mono font-black text-amber-400">${clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+          </div>
+          <button onClick=${onLogout} className="px-2.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-[10px] font-bold transition">Exit</button>
+        </div>
+      </header>
 
-    // Compact header
-    React.createElement("header", { className: "shrink-0 px-4 py-2 border-b border-stone-800/80 bg-stone-900/50 backdrop-blur flex items-center justify-between gap-3" },
-      React.createElement("div", { className: "flex items-center gap-2.5 min-w-0" },
-        React.createElement("div", { className: "w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-sm shrink-0" }, "🍳"),
-        React.createElement("div", { className: "min-w-0" },
-          React.createElement("h1", { className: "text-sm font-black text-white truncate leading-tight" }, "Kitchen Display"),
-          React.createElement("p", { className: "text-[10px] text-stone-500 truncate" }, restaurant.name))),
-      React.createElement("div", { className: "flex items-center gap-2 shrink-0" },
-        React.createElement("div", { className: "text-right hidden sm:block" },
-          React.createElement("div", { className: "text-[9px] text-stone-500 uppercase tracking-wider font-bold" }, "LIVE"),
-          React.createElement("div", { className: "text-xs font-mono font-black text-amber-400" }, clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))),
-        React.createElement("button", {
-          onClick: onLogout,
-          className: "px-2.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-[10px] font-bold transition"
-        }, "Exit"))),
-
-    // 3 columns - NO PAGE SCROLL
-    React.createElement("div", { className: "flex-1 grid grid-cols-3 gap-2 p-2 min-h-0 overflow-hidden" },
-      React.createElement(KitchenColumn, {
-        title: "PENDING", color: "amber", count: pending.length, orders: pending, loading,
-        actionLabel: "Start →", actionColor: "bg-amber-600 hover:bg-amber-500",
-        onAction: (id) => updateStatus(id, "PREPARING"), emptyText: "No pending orders"
-      }),
-      React.createElement(KitchenColumn, {
-        title: "PREPARING", color: "blue", count: preparing.length, orders: preparing,
-        actionLabel: "Ready ✓", actionColor: "bg-emerald-600 hover:bg-emerald-500",
-        onAction: (id) => updateStatus(id, "COMPLETED"), emptyText: "No dishes on grill"
-      }),
-      React.createElement(KitchenColumn, {
-        title: "COMPLETED", color: "emerald", count: completed.length, orders: completed,
-        actionLabel: "Re-open", actionColor: "bg-stone-700 hover:bg-stone-600",
-        onAction: (id) => updateStatus(id, "PREPARING"), emptyText: "No completed tickets", isDone: true
-      })));
+      <div className="flex-1 grid grid-cols-3 gap-2 p-2 min-h-0 overflow-hidden">
+        <${KitchenColumn} title="PENDING" color="amber" count=${pending.length} orders=${pending} loading=${loading} actionLabel="Start →" actionColor="bg-amber-600 hover:bg-amber-500" onAction=${(id) => updateStatus(id, "PREPARING")} emptyText="No pending orders" />
+        <${KitchenColumn} title="PREPARING" color="blue" count=${preparing.length} orders=${preparing} actionLabel="Ready ✓" actionColor="bg-emerald-600 hover:bg-emerald-500" onAction=${(id) => updateStatus(id, "COMPLETED")} emptyText="No dishes on grill" />
+        <${KitchenColumn} title="COMPLETED" color="emerald" count=${completed.length} orders=${completed} actionLabel="Re-open" actionColor="bg-stone-700 hover:bg-stone-600" onAction=${(id) => updateStatus(id, "PREPARING")} emptyText="No completed tickets" isDone=${true} />
+      </div>
+    </div>
+  `;
 }
 
 function KitchenColumn({ title, color, count, orders, loading, actionLabel, actionColor, onAction, emptyText, isDone }) {
-  const colorMap = {
+  const cMap = {
     amber: { text: "text-amber-400", bg: "bg-amber-500", border: "border-amber-500/30" },
     blue: { text: "text-blue-400", bg: "bg-blue-500", border: "border-blue-500/30" },
     emerald: { text: "text-emerald-400", bg: "bg-emerald-500", border: "border-emerald-500/30" }
   };
-  const c = colorMap[color];
-  return React.createElement("div", { className: "bg-stone-900/60 rounded-xl border border-stone-800 flex flex-col min-h-0 overflow-hidden" },
-    React.createElement("div", { className: `shrink-0 px-3 py-2 border-b border-stone-800 flex items-center justify-between ${c.border}` },
-      React.createElement("div", { className: "flex items-center gap-1.5" },
-        React.createElement("span", { className: `w-1.5 h-1.5 rounded-full ${c.bg} ${color === "amber" ? "animate-pulse" : ""}` }),
-        React.createElement("span", { className: `text-[10px] font-black uppercase tracking-wider ${c.text}` }, title)),
-      React.createElement("span", { className: `text-[10px] font-black px-1.5 py-0.5 rounded-md bg-stone-800 ${c.text}` }, count)),
-    React.createElement("div", { className: "flex-1 overflow-y-auto no-scrollbar p-1.5 space-y-1.5 min-h-0" },
-      loading ? React.createElement("div", { className: "text-center py-8 text-stone-500 text-[10px]" }, "Loading...")
-      : orders.length === 0 ? React.createElement("p", { className: "text-[10px] text-stone-500 text-center py-6" }, emptyText)
-      : orders.slice(0, isDone ? 20 : 50).map(o => React.createElement(CompactOrderCard, {
-          key: o.id, order: o, actionLabel, actionColor, onAction: () => onAction(o.id), isDone
-        }))));
+  const c = cMap[color];
+  return html`
+    <div className="bg-stone-900/60 rounded-xl border border-stone-800 flex flex-col min-h-0 overflow-hidden">
+      <div className=${`shrink-0 px-3 py-2 border-b border-stone-800 flex items-center justify-between ${c.border}`}>
+        <div className="flex items-center gap-1.5">
+          <span className=${`w-1.5 h-1.5 rounded-full ${c.bg} ${color === "amber" ? "animate-pulse" : ""}`}></span>
+          <span className=${`text-[10px] font-black uppercase tracking-wider ${c.text}`}>${title}</span>
+        </div>
+        <span className=${`text-[10px] font-black px-1.5 py-0.5 rounded-md bg-stone-800 ${c.text}`}>${count}</span>
+      </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar p-1.5 space-y-1.5 min-h-0">
+        ${loading ? html`<div className="text-center py-8 text-stone-500 text-[10px]">Loading...</div>`
+        : orders.length === 0 ? html`<p className="text-[10px] text-stone-500 text-center py-6">${emptyText}</p>`
+        : orders.slice(0, isDone ? 20 : 50).map(o => html`
+            <${CompactOrderCard} key=${o.id} order=${o} actionLabel=${actionLabel} actionColor=${actionColor} onAction=${() => onAction(o.id)} isDone=${isDone} />
+          `)}
+      </div>
+    </div>
+  `;
 }
 
 function CompactOrderCard({ order, actionLabel, actionColor, onAction, isDone }) {
   const time = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-  return React.createElement("div", { className: `bg-stone-900 rounded-lg p-2 border border-stone-800 hover:border-stone-700 transition ${isDone ? "opacity-70" : ""}` },
-    React.createElement("div", { className: "flex items-center justify-between gap-1 mb-1" },
-      React.createElement("span", { className: "font-black text-amber-400 font-mono text-[11px] truncate" }, order.tokenNumber),
-      React.createElement("span", { className: "bg-stone-800 text-stone-200 text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0" }, "T" + order.tableNumber),
-      time && React.createElement("span", { className: "text-[9px] text-stone-500 font-mono shrink-0" }, time)),
-    React.createElement("div", { className: "text-[10px] text-stone-300 leading-tight mb-1.5 line-clamp-2" },
-      order.items.map((i, idx) => React.createElement("span", { key: idx },
-        React.createElement("span", { className: "text-amber-400 font-bold" }, i.qty + "×"),
-        " " + i.name + (idx < order.items.length - 1 ? ", " : "")))),
-    order.specialInstructions && React.createElement("div", { className: "bg-amber-900/40 text-amber-200 text-[9px] rounded px-1.5 py-0.5 mb-1.5 truncate border-l-2 border-amber-500" }, "⚠ " + order.specialInstructions),
-    React.createElement("div", { className: "flex items-center justify-between pt-1 border-t border-stone-800/80" },
-      React.createElement("span", { className: "text-[10px] text-stone-400 font-mono font-bold" }, "₹" + order.totalAmount.toFixed(0)),
-      React.createElement("button", {
-        onClick: onAction,
-        className: `px-2 py-0.5 rounded text-white font-black text-[9px] transition ${actionColor}`
-      }, actionLabel)));
+  return html`
+    <div className=${`bg-stone-900 rounded-lg p-2 border border-stone-800 hover:border-stone-700 transition ${isDone ? "opacity-70" : ""}`}>
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <span className="font-black text-amber-400 font-mono text-[11px] truncate">${order.tokenNumber}</span>
+        <span className="bg-stone-800 text-stone-200 text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">T${order.tableNumber}</span>
+        ${time && html`<span className="text-[9px] text-stone-500 font-mono shrink-0">${time}</span>`}
+      </div>
+      <div className="text-[10px] text-stone-300 leading-tight mb-1.5 line-clamp-2">
+        ${order.items.map((i, idx) => html`
+          <span key=${idx}><span className="text-amber-400 font-bold">${i.qty}×</span> ${i.name}${idx < order.items.length - 1 ? ", " : ""}</span>
+        `)}
+      </div>
+      ${order.specialInstructions && html`
+        <div className="bg-amber-900/40 text-amber-200 text-[9px] rounded px-1.5 py-0.5 mb-1.5 truncate border-l-2 border-amber-500">⚠ ${order.specialInstructions}</div>
+      `}
+      <div className="flex items-center justify-between pt-1 border-t border-stone-800/80">
+        <span className="text-[10px] text-stone-400 font-mono font-bold">₹${order.totalAmount.toFixed(0)}</span>
+        <button onClick=${onAction} className=${`px-2 py-0.5 rounded text-white font-black text-[9px] transition ${actionColor}`}>${actionLabel}</button>
+      </div>
+    </div>
+  `;
 }
 
 // ==========================================
-// OWNER DASHBOARD (kept intact, polished)
+// OWNER DASHBOARD
 // ==========================================
 function OwnerDashboard({ restaurant, onLogout }) {
   const [menuItems, setMenuItems] = useState([]);
@@ -812,110 +903,166 @@ function OwnerDashboard({ restaurant, onLogout }) {
     }
   };
 
-  return React.createElement("div", { className: "max-w-3xl mx-auto p-4 md:p-6 min-h-screen font-sans" },
-    React.createElement("header", { className: "flex justify-between items-center pb-4 border-b border-stone-200 mb-5 gap-3" },
-      React.createElement("div", null,
-        React.createElement("h1", { className: "text-xl font-black text-stone-900" }, restaurant.name),
-        React.createElement("p", { className: "text-[11px] text-stone-500" }, "Owner Suite")),
-      React.createElement("div", { className: "flex items-center gap-2" },
-        React.createElement("button", {
-          onClick: () => setShowQrModal(true),
-          className: "px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
-        }, "📱 QR"),
-        React.createElement("button", { onClick: onLogout, className: "px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold" }, "Exit"))),
+  return html`
+    <div className="max-w-3xl mx-auto p-4 md:p-6 min-h-screen font-sans">
+      <header className="flex justify-between items-center pb-4 border-b border-stone-200 mb-5 gap-3">
+        <div>
+          <h1 className="text-xl font-black text-stone-900">${restaurant.name}</h1>
+          <p className="text-[11px] text-stone-500">Owner Suite</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick=${() => setShowQrModal(true)} className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform">📱 QR</button>
+          <button onClick=${onLogout} className="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold">Exit</button>
+        </div>
+      </header>
 
-    !isExpired && React.createElement("div", { className: "space-y-3 mb-6" },
-      React.createElement("div", { className: "grid grid-cols-3 gap-2.5" },
-        React.createElement("div", { className: "bg-white p-3 rounded-2xl border border-stone-200 shadow-sm" },
-          React.createElement("span", { className: "text-[10px] text-stone-500 font-semibold" }, "Revenue"),
-          React.createElement("p", { className: "text-xl font-black text-amber-700 font-mono mt-0.5" }, "₹" + todayRev.toFixed(0))),
-        React.createElement("div", { className: "bg-white p-3 rounded-2xl border border-stone-200 shadow-sm" },
-          React.createElement("span", { className: "text-[10px] text-stone-500 font-semibold" }, "Orders"),
-          React.createElement("p", { className: "text-xl font-black text-stone-900 mt-0.5" }, todayOrders.length)),
-        React.createElement("div", { className: "bg-white p-3 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between" },
-          React.createElement("div", null,
-            React.createElement("span", { className: "text-[10px] text-stone-500 font-semibold block" }, "History"),
-            React.createElement("span", { className: "text-xs font-bold text-stone-800" }, orders.length + " total")),
-          React.createElement("button", { onClick: handleClearHistory, className: "px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg border border-red-200" }, "Clear"))),
-      React.createElement("div", { className: "bg-stone-900 text-white p-3 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-2" },
-        React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider text-amber-400" }, "🍳 Live Kitchen"),
-        React.createElement("div", { className: "flex items-center gap-3 text-[10px] font-bold" },
-          React.createElement("span", { className: "text-red-400 flex items-center gap-1" }, React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" }), pendingC + " Pending"),
-          React.createElement("span", { className: "text-amber-300 flex items-center gap-1" }, React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-amber-400" }), prepC + " Preparing"),
-          React.createElement("span", { className: "text-emerald-400 flex items-center gap-1" }, React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-emerald-500" }), doneC + " Done")))),
+      ${!isExpired && html`
+        <div className="space-y-3 mb-6">
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 font-semibold">Revenue</span>
+              <p className="text-xl font-black text-amber-700 font-mono mt-0.5">₹${todayRev.toFixed(0)}</p>
+            </div>
+            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 font-semibold">Orders</span>
+              <p className="text-xl font-black text-stone-900 mt-0.5">${todayOrders.length}</p>
+            </div>
+            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-stone-500 font-semibold block">History</span>
+                <span className="text-xs font-bold text-stone-800">${orders.length} total</span>
+              </div>
+              <button onClick=${handleClearHistory} className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg border border-red-200">Clear</button>
+            </div>
+          </div>
+          <div className="bg-stone-900 text-white p-3 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">🍳 Live Kitchen</span>
+            <div className="flex items-center gap-3 text-[10px] font-bold">
+              <span className="text-red-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>${pendingC} Pending</span>
+              <span className="text-amber-300 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${prepC} Preparing</span>
+              <span className="text-emerald-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${doneC} Done</span>
+            </div>
+          </div>
+        </div>
+      `}
 
-    React.createElement("div", { className: "mb-5" },
-      isExpired
-        ? React.createElement("div", { className: "p-4 rounded-2xl bg-red-50 border-2 border-red-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" },
-            React.createElement("div", null,
-              React.createElement("h2", { className: "text-sm font-black text-red-600" }, "🚨 Subscription Expired"),
-              React.createElement("p", { className: "text-[11px] text-red-800 mt-0.5" }, "Expired " + restaurant.dueDate + ". Renew to unlock.")),
-            React.createElement("button", { onClick: () => alert("Renewal request sent!"), className: "px-3 py-1.5 bg-red-600 text-white rounded-lg text-[11px] font-bold" }, "Renew"))
-        : React.createElement("div", { className: "p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-3" },
-            React.createElement("div", null,
-              React.createElement("span", { className: "text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded" }, "Active"),
-              React.createElement("h3", { className: "text-sm font-black text-emerald-900 mt-1" }, "Until " + restaurant.dueDate),
-              React.createElement("p", { className: "text-[10px] text-emerald-700" }, daysLeft > 0 ? daysLeft + " days left" : "Expires today")),
-            React.createElement("button", { onClick: () => alert("Plan is active"), className: "px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-[11px] font-bold" }, "Extend"))),
+      <div className="mb-5">
+        ${isExpired
+          ? html`
+            <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-black text-red-600">🚨 Subscription Expired</h2>
+                <p className="text-[11px] text-red-800 mt-0.5">Expired ${restaurant.dueDate}. Renew to unlock.</p>
+              </div>
+              <button onClick=${() => alert("Renewal request sent!")} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-[11px] font-bold">Renew</button>
+            </div>
+          `
+          : html`
+            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-3">
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Active</span>
+                <h3 className="text-sm font-black text-emerald-900 mt-1">Until ${restaurant.dueDate}</h3>
+                <p className="text-[10px] text-emerald-700">${daysLeft > 0 ? daysLeft + " days left" : "Expires today"}</p>
+              </div>
+              <button onClick=${() => alert("Plan is active")} className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-[11px] font-bold">Extend</button>
+            </div>
+          `
+        }
+      </div>
 
-    isExpired
-      ? React.createElement("div", { className: "p-10 text-center bg-stone-100 rounded-3xl border border-stone-300" },
-          React.createElement("span", { className: "text-4xl" }, "🔒"),
-          React.createElement("h3", { className: "text-base font-bold text-stone-800 mt-2" }, "Dashboard Locked"),
-          React.createElement("p", { className: "text-xs text-stone-500 max-w-sm mx-auto mt-1" }, "Renew subscription to edit menu."))
-      : React.createElement("div", { className: "space-y-4" },
-          React.createElement("div", { className: "flex justify-between items-center" },
-            React.createElement("div", null,
-              React.createElement("h2", { className: "text-base font-black text-stone-800" }, "Menu (" + menuItems.length + ")"),
-              React.createElement("p", { className: "text-[11px] text-stone-500" }, "Live catalog")),
-            React.createElement("button", { onClick: () => setShowAddModal(true), className: "px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold shadow-sm" }, "+ Add Dish")),
-          loading ? React.createElement("div", { className: "py-10 text-center text-xs text-stone-500" }, "Loading...")
-          : menuItems.length === 0 ? React.createElement("div", { className: "p-10 text-center bg-white rounded-3xl border border-dashed border-stone-300" },
-              React.createElement("span", { className: "text-3xl" }, "🍲"),
-              React.createElement("p", { className: "font-bold text-sm text-stone-700 mt-2" }, "No menu items"),
-              React.createElement("p", { className: "text-xs text-stone-500" }, "Click '+ Add Dish' to create your first item"))
-          : React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-2.5" },
-              menuItems.map(item => {
-                const avail = item.available !== false;
-                return React.createElement("div", { key: item.id, className: "bg-white rounded-2xl p-2.5 border border-stone-200 shadow-sm flex gap-2.5 items-center relative" },
-                  !avail && React.createElement("div", { className: "absolute top-1.5 right-1.5 bg-rose-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full" }, "Hidden"),
-                  React.createElement("img", { src: item.image || item.imageUrl, alt: item.name, className: `w-16 h-16 rounded-xl object-cover bg-stone-100 ${!avail ? 'grayscale opacity-60' : ''}`, onError: e => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; } }),
-                  React.createElement("div", { className: "flex-1 min-w-0" },
-                    React.createElement("div", { className: "flex justify-between items-start gap-1" },
-                      React.createElement("h4", { className: "font-bold text-xs text-stone-900 truncate" }, item.name),
-                      React.createElement("span", { className: "font-extrabold text-amber-700 text-xs font-mono shrink-0" }, "₹" + Number(item.price).toFixed(0))),
-                    React.createElement("p", { className: "text-[10px] text-stone-400" }, item.category),
-                    React.createElement("div", { className: "mt-1.5 pt-1.5 border-t border-stone-100 flex justify-between items-center" },
-                      React.createElement("label", { className: "flex items-center gap-1 cursor-pointer text-stone-600 font-bold select-none text-[9px]" },
-                        React.createElement("input", { type: "checkbox", checked: avail, onChange: () => handleToggle(item.id, avail), className: "rounded border-stone-300 text-amber-600 focus:ring-amber-500 w-3 h-3" }),
-                        "Show"),
-                      React.createElement("button", { onClick: () => handleDelete(item.id), className: "text-[10px] text-red-500 hover:text-red-700 font-semibold" }, "Delete"))));
-              }))),
+      ${isExpired
+        ? html`
+          <div className="p-10 text-center bg-stone-100 rounded-3xl border border-stone-300">
+            <span className="text-4xl">🔒</span>
+            <h3 className="text-base font-bold text-stone-800 mt-2">Dashboard Locked</h3>
+            <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1">Renew subscription to edit menu.</p>
+          </div>
+        `
+        : html`
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-base font-black text-stone-800">Menu (${menuItems.length})</h2>
+                <p className="text-[11px] text-stone-500">Live catalog</p>
+              </div>
+              <button onClick=${() => setShowAddModal(true)} className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold shadow-sm">+ Add Dish</button>
+            </div>
+            
+            ${loading ? html`<div className="py-10 text-center text-xs text-stone-500">Loading...</div>`
+            : menuItems.length === 0 ? html`
+              <div className="p-10 text-center bg-white rounded-3xl border border-dashed border-stone-300">
+                <span className="text-3xl">🍲</span>
+                <p className="font-bold text-sm text-stone-700 mt-2">No menu items</p>
+                <p className="text-xs text-stone-500">Click '+ Add Dish' to create your first item</p>
+              </div>
+            ` : html`
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                ${menuItems.map(item => {
+                  const avail = item.available !== false;
+                  return html`
+                    <div key=${item.id} className="bg-white rounded-2xl p-2.5 border border-stone-200 shadow-sm flex gap-2.5 items-center relative">
+                      ${!avail && html`<div className="absolute top-1.5 right-1.5 bg-rose-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">Hidden</div>`}
+                      <img src=${item.image || item.imageUrl} alt=${item.name} className=${`w-16 h-16 rounded-xl object-cover bg-stone-100 ${!avail ? 'grayscale opacity-60' : ''}`} onError=${e => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-1">
+                          <h4 className="font-bold text-xs text-stone-900 truncate">${item.name}</h4>
+                          <span className="font-extrabold text-amber-700 text-xs font-mono shrink-0">₹${Number(item.price).toFixed(0)}</span>
+                        </div>
+                        <p className="text-[10px] text-stone-400">${item.category}</p>
+                        <div className="mt-1.5 pt-1.5 border-t border-stone-100 flex justify-between items-center">
+                          <label className="flex items-center gap-1 cursor-pointer text-stone-600 font-bold select-none text-[9px]">
+                            <input type="checkbox" checked=${avail} onChange=${() => handleToggle(item.id, avail)} className="rounded border-stone-300 text-amber-600 focus:ring-amber-500 w-3 h-3" />
+                            Show
+                          </label>
+                          <button onClick=${() => handleDelete(item.id)} className="text-[10px] text-red-500 hover:text-red-700 font-semibold">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                })}
+              </div>
+            `}
+          </div>
+        `
+      }
 
-    showAddModal && React.createElement("div", { className: "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" },
-      React.createElement("form", { onSubmit: handleAddItem, className: "bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-2.5 anim-slide-up" },
-        React.createElement("h3", { className: "text-base font-black text-stone-900" }, "Add Dish"),
-        React.createElement("input", { required: true, type: "text", value: newItem.name, onChange: e => setNewItem({ ...newItem, name: e.target.value }), className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3", placeholder: "Dish name" }),
-        React.createElement("input", { required: true, type: "number", step: "0.01", value: newItem.price, onChange: e => setNewItem({ ...newItem, price: e.target.value }), className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3", placeholder: "Price ₹" }),
-        React.createElement("div", { className: "grid grid-cols-2 gap-2" },
-          React.createElement("select", { value: newItem.type, onChange: e => setNewItem({ ...newItem, type: e.target.value }), className: "text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" },
-            React.createElement("option", null, "Veg"), React.createElement("option", null, "Non-Veg")),
-          React.createElement("select", { value: newItem.category, onChange: e => setNewItem({ ...newItem, category: e.target.value }), className: "text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" },
-            ["Mains", "Snacks", "Drinks", "Ice Cream", "Desserts"].map(c => React.createElement("option", { key: c }, c)))),
-        React.createElement("input", { type: "url", value: newItem.image, onChange: e => setNewItem({ ...newItem, image: e.target.value }), className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3", placeholder: "Image URL" }),
-        React.createElement("textarea", { value: newItem.description, onChange: e => setNewItem({ ...newItem, description: e.target.value }), className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3", rows: "2", placeholder: "Description" }),
-        React.createElement("label", { className: "flex items-center gap-2 text-xs text-stone-700 font-medium" },
-          React.createElement("input", { type: "checkbox", checked: newItem.isSpecial, onChange: e => setNewItem({ ...newItem, isSpecial: e.target.checked }) }),
-          "Special / Chef's Pick"),
-        React.createElement("div", { className: "flex justify-end gap-2 pt-2" },
-          React.createElement("button", { type: "button", onClick: () => setShowAddModal(false), className: "px-4 py-2 bg-stone-100 text-stone-700 rounded-xl text-xs font-bold" }, "Cancel"),
-          React.createElement("button", { type: "submit", className: "px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold" }, "Save")))),
+      ${showAddModal && html`
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit=${handleAddItem} className="bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-2.5 anim-slide-up">
+            <h3 className="text-base font-black text-stone-900">Add Dish</h3>
+            <input required type="text" value=${newItem.name} onInput=${e => setNewItem({ ...newItem, name: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" placeholder="Dish name" />
+            <input required type="number" step="0.01" value=${newItem.price} onInput=${e => setNewItem({ ...newItem, price: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" placeholder="Price ₹" />
+            <div className="grid grid-cols-2 gap-2">
+              <select value=${newItem.type} onChange=${e => setNewItem({ ...newItem, type: e.target.value })} className="text-xs bg-stone-50 border border-stone-200 rounded-xl p-3">
+                <option>Veg</option><option>Non-Veg</option>
+              </select>
+              <select value=${newItem.category} onChange=${e => setNewItem({ ...newItem, category: e.target.value })} className="text-xs bg-stone-50 border border-stone-200 rounded-xl p-3">
+                ${["Mains", "Snacks", "Drinks", "Ice Cream", "Desserts"].map(c => html`<option key=${c}>${c}</option>`)}
+              </select>
+            </div>
+            <input type="url" value=${newItem.image} onInput=${e => setNewItem({ ...newItem, image: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" placeholder="Image URL" />
+            <textarea value=${newItem.description} onInput=${e => setNewItem({ ...newItem, description: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" rows="2" placeholder="Description"></textarea>
+            <label className="flex items-center gap-2 text-xs text-stone-700 font-medium">
+              <input type="checkbox" checked=${newItem.isSpecial} onChange=${e => setNewItem({ ...newItem, isSpecial: e.target.checked })} />
+              Special / Chef's Pick
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick=${() => setShowAddModal(false)} className="px-4 py-2 bg-stone-100 text-stone-700 rounded-xl text-xs font-bold">Cancel</button>
+              <button type="submit" className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold">Save</button>
+            </div>
+          </form>
+        </div>
+      `}
 
-    showQrModal && React.createElement(TableQrGeneratorModal, { currentRestId: targetRestId, currentTable: 5, restaurantName: restaurant.name, onClose: () => setShowQrModal(false) }));
+      ${showQrModal && html`
+        <${TableQrGeneratorModal} currentRestId=${targetRestId} currentTable=${5} restaurantName=${restaurant.name} onClose=${() => setShowQrModal(false)} />
+      `}
+    </div>
+  `;
 }
 
 // ==========================================
-// SUPER ADMIN (kept intact)
+// SUPER ADMIN
 // ==========================================
 function SuperAdminDashboard({ restaurants, onRenew, onAddRestaurant, onLogout, setRestaurants }) {
   const [activeTab, setActiveTab] = useState("restaurants");
@@ -972,104 +1119,143 @@ function SuperAdminDashboard({ restaurants, onRenew, onAddRestaurant, onLogout, 
   const activeC = restaurants.filter(r => r.subscriptionStatus === "ACTIVE").length;
   const expC = restaurants.filter(r => r.subscriptionStatus === "EXPIRED").length;
 
-  return React.createElement("div", { className: "max-w-4xl mx-auto p-4 md:p-6 min-h-screen font-sans" },
-    React.createElement("header", { className: "flex flex-wrap justify-between items-center pb-4 border-b border-stone-200 mb-5 gap-3" },
-      React.createElement("div", null,
-        React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded" }, "Super Admin"),
-        React.createElement("h1", { className: "text-lg font-black text-stone-900 mt-1" }, "SaaS Manager")),
-      React.createElement("button", { onClick: onLogout, className: "px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 text-xs font-bold" }, "Exit")),
+  return html`
+    <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-screen font-sans">
+      <header className="flex flex-wrap justify-between items-center pb-4 border-b border-stone-200 mb-5 gap-3">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Super Admin</span>
+          <h1 className="text-lg font-black text-stone-900 mt-1">SaaS Manager</h1>
+        </div>
+        <button onClick=${onLogout} className="px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 text-xs font-bold">Exit</button>
+      </header>
 
-    React.createElement("div", { className: "flex border-b border-stone-200 mb-5 gap-1" },
-      React.createElement("button", { onClick: () => setActiveTab("restaurants"), className: `pb-2.5 px-3 font-bold text-xs flex items-center gap-1.5 border-b-2 ${activeTab === "restaurants" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500"}` },
-        "🏪 Restaurants", React.createElement("span", { className: "text-[10px] px-1.5 py-0.5 rounded-full bg-stone-100 font-black" }, restaurants.length)),
-      React.createElement("button", { onClick: () => setActiveTab("pingenerator"), className: `pb-2.5 px-3 font-bold text-xs flex items-center gap-1.5 border-b-2 ${activeTab === "pingenerator" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500"}` },
-        "🔑 PIN Gen")),
+      <div className="flex border-b border-stone-200 mb-5 gap-1">
+        <button onClick=${() => setActiveTab("restaurants")} className=${`pb-2.5 px-3 font-bold text-xs flex items-center gap-1.5 border-b-2 ${activeTab === "restaurants" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500"}`}>
+          🏪 Restaurants <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-100 font-black">${restaurants.length}</span>
+        </button>
+        <button onClick=${() => setActiveTab("pingenerator")} className=${`pb-2.5 px-3 font-bold text-xs flex items-center gap-1.5 border-b-2 ${activeTab === "pingenerator" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500"}`}>
+          🔑 PIN Gen
+        </button>
+      </div>
 
-    activeTab === "restaurants" && React.createElement("div", { className: "space-y-4" },
-      React.createElement("div", { className: "grid grid-cols-3 gap-2.5" },
-        React.createElement("div", { className: "bg-white p-3 rounded-2xl border border-stone-200 shadow-sm" },
-          React.createElement("span", { className: "text-[10px] text-stone-500 font-semibold" }, "Total"),
-          React.createElement("p", { className: "text-xl font-black text-stone-900 mt-0.5" }, restaurants.length)),
-        React.createElement("div", { className: "bg-emerald-50 p-3 rounded-2xl border border-emerald-200 shadow-sm" },
-          React.createElement("span", { className: "text-[10px] text-emerald-700 font-semibold" }, "Active"),
-          React.createElement("p", { className: "text-xl font-black text-emerald-800 mt-0.5" }, activeC)),
-        React.createElement("div", { className: "bg-red-50 p-3 rounded-2xl border border-red-200 shadow-sm" },
-          React.createElement("span", { className: "text-[10px] text-red-700 font-semibold" }, "Expired"),
-          React.createElement("p", { className: "text-xl font-black text-red-800 mt-0.5" }, expC))),
-      React.createElement("div", { className: "bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden" },
-        React.createElement("div", { className: "p-3.5 border-b border-stone-200 bg-stone-50 flex justify-between items-center" },
-          React.createElement("h3", { className: "font-black text-sm text-stone-800" }, "Tenants"),
-          React.createElement("button", { onClick: () => setActiveTab("pingenerator"), className: "px-2.5 py-1 bg-purple-600 text-white rounded-lg text-[10px] font-bold" }, "+ Add")),
-        React.createElement("div", { className: "overflow-x-auto" },
-          React.createElement("table", { className: "w-full text-left text-xs" },
-            React.createElement("thead", { className: "bg-stone-100 text-stone-600 uppercase font-bold tracking-wider text-[10px]" },
-              React.createElement("tr", null,
-                ["Restaurant", "PINs", "Status", "Due", "Days", "Actions"].map(h => React.createElement("th", { key: h, className: "p-2.5" }, h)))),
-            React.createElement("tbody", { className: "divide-y divide-stone-100" },
-              restaurants.map(rest => {
-                const isExp = rest.subscriptionStatus === "EXPIRED";
-                const days = getDaysRemaining(rest.dueDate);
-                return React.createElement("tr", { key: rest.id, className: "hover:bg-stone-50/50" },
-                  React.createElement("td", { className: "p-2.5" },
-                    React.createElement("div", { className: "text-xs font-black text-stone-900" }, rest.name),
-                    React.createElement("div", { className: "text-[9px] text-stone-400 font-mono" }, rest.id)),
-                  React.createElement("td", { className: "p-2.5" },
-                    React.createElement("div", { className: "space-y-0.5 font-mono text-[10px]" },
-                      React.createElement("div", null, React.createElement("span", { className: "text-amber-700 font-bold" }, "O:"), " " + (rest.ownerPin || "111111")),
-                      React.createElement("div", null, React.createElement("span", { className: "text-blue-700 font-bold" }, "K:"), " " + (rest.kitchenPin || "222222")))),
-                  React.createElement("td", { className: "p-2.5" },
-                    isExp ? React.createElement("span", { className: "px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-black text-[9px]" }, "EXPIRED")
-                          : React.createElement("span", { className: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[9px]" }, "ACTIVE")),
-                  React.createElement("td", { className: "p-2.5 font-mono text-[10px] text-stone-700" }, rest.dueDate),
-                  React.createElement("td", { className: "p-2.5 text-[10px]" },
-                    isExp ? React.createElement("span", { className: "text-red-600 font-bold" }, "Past") : React.createElement("span", { className: "text-emerald-700 font-bold" }, days + "d")),
-                  React.createElement("td", { className: "p-2.5" },
-                    React.createElement("div", { className: "flex items-center gap-1" },
-                      React.createElement("button", { onClick: () => onRenew(rest.id), className: "px-2 py-0.5 rounded bg-indigo-600 text-white font-bold text-[9px]" }, "Renew"),
-                      React.createElement("button", { onClick: () => handleChangePin(rest.id, rest.name), className: "px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 font-bold text-[9px]" }, "PIN"),
-                      React.createElement("button", { onClick: () => handleDeleteRestaurant(rest.id, rest.name), className: "px-1.5 py-0.5 rounded bg-red-50 text-red-600 text-[9px]" }, "🗑"))));
-              })))))),
+      ${activeTab === "restaurants" && html`
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm">
+              <span className="text-[10px] text-stone-500 font-semibold">Total</span>
+              <p className="text-xl font-black text-stone-900 mt-0.5">${restaurants.length}</p>
+            </div>
+            <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 shadow-sm">
+              <span className="text-[10px] text-emerald-700 font-semibold">Active</span>
+              <p className="text-xl font-black text-emerald-800 mt-0.5">${activeC}</p>
+            </div>
+            <div className="bg-red-50 p-3 rounded-2xl border border-red-200 shadow-sm">
+              <span className="text-[10px] text-red-700 font-semibold">Expired</span>
+              <p className="text-xl font-black text-red-800 mt-0.5">${expC}</p>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="p-3.5 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
+              <h3 className="font-black text-sm text-stone-800">Tenants</h3>
+              <button onClick=${() => setActiveTab("pingenerator")} className="px-2.5 py-1 bg-purple-600 text-white rounded-lg text-[10px] font-bold">+ Add</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-stone-100 text-stone-600 uppercase font-bold tracking-wider text-[10px]">
+                  <tr>${["Restaurant", "PINs", "Status", "Due", "Days", "Actions"].map(h => html`<th key=${h} className="p-2.5">${h}</th>`)}</tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  ${restaurants.map(rest => {
+                    const isExp = rest.subscriptionStatus === "EXPIRED";
+                    const days = getDaysRemaining(rest.dueDate);
+                    return html`
+                      <tr key=${rest.id} className="hover:bg-stone-50/50">
+                        <td className="p-2.5">
+                          <div className="text-xs font-black text-stone-900">${rest.name}</div>
+                          <div className="text-[9px] text-stone-400 font-mono">${rest.id}</div>
+                        </td>
+                        <td className="p-2.5">
+                          <div className="space-y-0.5 font-mono text-[10px]">
+                            <div><span className="text-amber-700 font-bold">O:</span> ${rest.ownerPin || "111111"}</div>
+                            <div><span className="text-blue-700 font-bold">K:</span> ${rest.kitchenPin || "222222"}</div>
+                          </div>
+                        </td>
+                        <td className="p-2.5">
+                          ${isExp 
+                            ? html`<span className="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-black text-[9px]">EXPIRED</span>` 
+                            : html`<span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[9px]">ACTIVE</span>`}
+                        </td>
+                        <td className="p-2.5 font-mono text-[10px] text-stone-700">${rest.dueDate}</td>
+                        <td className="p-2.5 text-[10px]">
+                          ${isExp ? html`<span className="text-red-600 font-bold">Past</span>` : html`<span className="text-emerald-700 font-bold">${days}d</span>`}
+                        </td>
+                        <td className="p-2.5">
+                          <div className="flex items-center gap-1">
+                            <button onClick=${() => onRenew(rest.id)} className="px-2 py-0.5 rounded bg-indigo-600 text-white font-bold text-[9px]">Renew</button>
+                            <button onClick=${() => handleChangePin(rest.id, rest.name)} className="px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 font-bold text-[9px]">PIN</button>
+                            <button onClick=${() => handleDeleteRestaurant(rest.id, rest.name)} className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 text-[9px]">🗑</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `}
 
-    activeTab === "pingenerator" && React.createElement("div", { className: "space-y-4 max-w-lg mx-auto" },
-      React.createElement("div", { className: "bg-white rounded-3xl border border-stone-200 shadow-sm p-5 space-y-4" },
-        React.createElement("div", null,
-          React.createElement("span", { className: "text-[9px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded" }, "New Tenant"),
-          React.createElement("h2", { className: "text-base font-black text-stone-900 mt-1.5" }, "Generate PINs"),
-          React.createElement("p", { className: "text-[11px] text-stone-500 mt-0.5" }, "Create restaurant with 30-day subscription")),
-        React.createElement("form", { onSubmit: handleGeneratePins, className: "space-y-3" },
-          React.createElement("input", {
-            type: "text", required: true, value: restaurantName,
-            onChange: e => { setRestaurantName(e.target.value); if (errorMsg) setErrorMsg(""); },
-            placeholder: "Restaurant name",
-            className: "w-full text-sm bg-stone-50 border border-stone-200 rounded-2xl p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
-          }),
-          errorMsg && React.createElement("p", { className: "text-[11px] font-bold text-red-600" }, errorMsg),
-          React.createElement("button", {
-            type: "submit", disabled: isGenerating || !restaurantName.trim(),
-            className: "w-full py-3 bg-purple-600 disabled:bg-stone-300 text-white font-black text-xs rounded-2xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-          }, isGenerating ? React.createElement(React.Fragment, null,
-            React.createElement("span", { className: "w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" }),
-            "Saving...") : "Generate & Create"))),
-      generatedResult && React.createElement("div", { className: "bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl border-2 border-emerald-400 p-5 shadow-lg space-y-3 anim-slide-up" },
-        React.createElement("div", { className: "flex items-center gap-2" },
-          React.createElement("div", { className: "w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm" }, "✓"),
-          React.createElement("div", null,
-            React.createElement("span", { className: "text-[9px] font-black uppercase text-emerald-800 bg-emerald-200 px-1.5 py-0.5 rounded" }, "Created"),
-            React.createElement("h3", { className: "text-sm font-black text-emerald-950 mt-0.5" }, generatedResult.name))),
-        React.createElement("div", { className: "grid grid-cols-2 gap-2" },
-          React.createElement("div", { className: "bg-white rounded-xl p-2.5 border border-emerald-200" },
-            React.createElement("span", { className: "text-[9px] font-bold uppercase text-amber-800" }, "Owner PIN"),
-            React.createElement("div", { className: "text-lg font-mono font-black text-stone-900 tracking-widest my-0.5" }, generatedResult.ownerPin),
-            React.createElement("button", { onClick: () => handleCopy(generatedResult.ownerPin, "o"), className: "w-full text-[10px] py-1 bg-amber-50 text-amber-900 font-bold rounded-lg" }, copiedField === "o" ? "✓" : "Copy")),
-          React.createElement("div", { className: "bg-white rounded-xl p-2.5 border border-emerald-200" },
-            React.createElement("span", { className: "text-[9px] font-bold uppercase text-blue-800" }, "Kitchen PIN"),
-            React.createElement("div", { className: "text-lg font-mono font-black text-stone-900 tracking-widest my-0.5" }, generatedResult.kitchenPin),
-            React.createElement("button", { onClick: () => handleCopy(generatedResult.kitchenPin, "k"), className: "w-full text-[10px] py-1 bg-blue-50 text-blue-900 font-bold rounded-lg" }, copiedField === "k" ? "✓" : "Copy"))),
-        React.createElement("button", { onClick: () => setActiveTab("restaurants"), className: "w-full py-2 bg-emerald-700 text-white font-bold text-xs rounded-xl" }, "View in Restaurants →"))));
+      ${activeTab === "pingenerator" && html`
+        <div className="space-y-4 max-w-lg mx-auto">
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 space-y-4">
+            <div>
+              <span className="text-[9px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded">New Tenant</span>
+              <h2 className="text-base font-black text-stone-900 mt-1.5">Generate PINs</h2>
+              <p className="text-[11px] text-stone-500 mt-0.5">Create restaurant with 30-day subscription</p>
+            </div>
+            <form onSubmit=${handleGeneratePins} className="space-y-3">
+              <input type="text" required value=${restaurantName} onInput=${e => { setRestaurantName(e.target.value); if (errorMsg) setErrorMsg(""); }} placeholder="Restaurant name" className="w-full text-sm bg-stone-50 border border-stone-200 rounded-2xl p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium" />
+              ${errorMsg && html`<p className="text-[11px] font-bold text-red-600">${errorMsg}</p>`}
+              <button type="submit" disabled=${isGenerating || !restaurantName.trim()} className="w-full py-3 bg-purple-600 disabled:bg-stone-300 text-white font-black text-xs rounded-2xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                ${isGenerating ? html`<span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Saving...` : "Generate & Create"}
+              </button>
+            </form>
+          </div>
+
+          ${generatedResult && html`
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl border-2 border-emerald-400 p-5 shadow-lg space-y-3 anim-slide-up">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm">✓</div>
+                <div>
+                  <span className="text-[9px] font-black uppercase text-emerald-800 bg-emerald-200 px-1.5 py-0.5 rounded">Created</span>
+                  <h3 className="text-sm font-black text-emerald-950 mt-0.5">${generatedResult.name}</h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white rounded-xl p-2.5 border border-emerald-200">
+                  <span className="text-[9px] font-bold uppercase text-amber-800">Owner PIN</span>
+                  <div className="text-lg font-mono font-black text-stone-900 tracking-widest my-0.5">${generatedResult.ownerPin}</div>
+                  <button onClick=${() => handleCopy(generatedResult.ownerPin, "o")} className="w-full text-[10px] py-1 bg-amber-50 text-amber-900 font-bold rounded-lg">${copiedField === "o" ? "✓" : "Copy"}</button>
+                </div>
+                <div className="bg-white rounded-xl p-2.5 border border-emerald-200">
+                  <span className="text-[9px] font-bold uppercase text-blue-800">Kitchen PIN</span>
+                  <div className="text-lg font-mono font-black text-stone-900 tracking-widest my-0.5">${generatedResult.kitchenPin}</div>
+                  <button onClick=${() => handleCopy(generatedResult.kitchenPin, "k")} className="w-full text-[10px] py-1 bg-blue-50 text-blue-900 font-bold rounded-lg">${copiedField === "k" ? "✓" : "Copy"}</button>
+                </div>
+              </div>
+              <button onClick=${() => setActiveTab("restaurants")} className="w-full py-2 bg-emerald-700 text-white font-bold text-xs rounded-xl">View in Restaurants →</button>
+            </div>
+          `}
+        </div>
+      `}
+    </div>
+  `;
 }
 
 // ==========================================
-// PIN LOGIN (kept intact)
+// PIN LOGIN
 // ==========================================
 function PinLoginModal({ restaurants, defaultRestId, onSuccess, onCancel }) {
   const [pin, setPin] = useState("");
@@ -1092,35 +1278,42 @@ function PinLoginModal({ restaurants, defaultRestId, onSuccess, onCancel }) {
     if (pin === "222222") { onSuccess({ role: "kitchen", restaurantId: "rest-101" }); return; }
     setError("Invalid PIN");
   };
-  return React.createElement("div", { className: "fixed inset-0 z-50 bg-stone-950 flex items-center justify-center p-4" },
-    React.createElement("div", { className: "bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center space-y-4 anim-slide-up" },
-      React.createElement("div", { className: "flex justify-between items-center" },
-        React.createElement("span", { className: "text-xl" }, "🔐"),
-        React.createElement("button", { onClick: onCancel, className: "text-stone-400 text-sm font-bold" }, "✕")),
-      React.createElement("div", null,
-        React.createElement("h2", { className: "text-base font-black text-stone-900" }, "Staff Login"),
-        React.createElement("p", { className: "text-[11px] text-stone-500" }, "Enter 6-digit PIN")),
-      React.createElement("div", { className: "flex justify-center gap-1.5 my-2" },
-        [0, 1, 2, 3, 4, 5].map(i => React.createElement("div", {
-          key: i, className: `w-8 h-10 rounded-xl border flex items-center justify-center font-bold text-base font-mono ${pin[i] ? "border-amber-600 bg-amber-50 text-amber-900" : "border-stone-200 bg-stone-50"}`
-        }, pin[i] ? "•" : ""))),
-      error && React.createElement("p", { className: "text-[11px] text-red-600 font-bold" }, error),
-      React.createElement("div", { className: "grid grid-cols-3 gap-1.5 pt-1" },
-        [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => React.createElement("button", {
-          key: n, onClick: () => handleDigit(n.toString()),
-          className: "py-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-800 font-bold text-base border border-stone-200 active:scale-95 transition-transform"
-        }, n)),
-        React.createElement("button", { onClick: () => setPin(""), className: "py-2.5 rounded-xl bg-stone-50 text-stone-400 font-bold text-[10px]" }, "Clear"),
-        React.createElement("button", { onClick: () => handleDigit("0"), className: "py-2.5 rounded-xl bg-stone-50 text-stone-800 font-bold text-base border border-stone-200" }, "0"),
-        React.createElement("button", { onClick: handleDelete, className: "py-2.5 rounded-xl bg-stone-50 text-stone-600 font-bold text-sm" }, "⌫")),
-      React.createElement("button", {
-        onClick: handleLogin, disabled: pin.length < 6,
-        className: "w-full py-3 bg-amber-600 disabled:bg-stone-300 text-white rounded-xl font-bold text-xs shadow-sm active:scale-[0.98] transition-transform"
-      }, "Verify")));
+  
+  return html`
+    <div className="fixed inset-0 z-50 bg-stone-950 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center space-y-4 anim-slide-up">
+        <div className="flex justify-between items-center">
+          <span className="text-xl">🔐</span>
+          <button onClick=${onCancel} className="text-stone-400 text-sm font-bold">✕</button>
+        </div>
+        <div>
+          <h2 className="text-base font-black text-stone-900">Staff Login</h2>
+          <p className="text-[11px] text-stone-500">Enter 6-digit PIN</p>
+        </div>
+        <div className="flex justify-center gap-1.5 my-2">
+          ${[0, 1, 2, 3, 4, 5].map(i => html`
+            <div key=${i} className=${`w-8 h-10 rounded-xl border flex items-center justify-center font-bold text-base font-mono ${pin[i] ? "border-amber-600 bg-amber-50 text-amber-900" : "border-stone-200 bg-stone-50"}`}>
+              ${pin[i] ? "•" : ""}
+            </div>
+          `)}
+        </div>
+        ${error && html`<p className="text-[11px] text-red-600 font-bold">${error}</p>`}
+        <div className="grid grid-cols-3 gap-1.5 pt-1">
+          ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => html`
+            <button key=${n} onClick=${() => handleDigit(n.toString())} className="py-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-800 font-bold text-base border border-stone-200 active:scale-95 transition-transform">${n}</button>
+          `)}
+          <button onClick=${() => setPin("")} className="py-2.5 rounded-xl bg-stone-50 text-stone-400 font-bold text-[10px]">Clear</button>
+          <button onClick=${() => handleDigit("0")} className="py-2.5 rounded-xl bg-stone-50 text-stone-800 font-bold text-base border border-stone-200">0</button>
+          <button onClick=${handleDelete} className="py-2.5 rounded-xl bg-stone-50 text-stone-600 font-bold text-sm">⌫</button>
+        </div>
+        <button onClick=${handleLogin} disabled=${pin.length < 6} className="w-full py-3 bg-amber-600 disabled:bg-stone-300 text-white rounded-xl font-bold text-xs shadow-sm active:scale-[0.98] transition-transform">Verify</button>
+      </div>
+    </div>
+  `;
 }
 
 // ==========================================
-// TABLE QR GENERATOR (kept intact)
+// TABLE QR GENERATOR
 // ==========================================
 function TableQrGeneratorModal({ currentRestId, currentTable, restaurantName, onSelect, onClose }) {
   const [rest] = useState(currentRestId || "rest-101");
@@ -1132,34 +1325,46 @@ function TableQrGeneratorModal({ currentRestId, currentTable, restaurantName, on
   const url = `${base}/?restId=${encodeURIComponent(rest)}&table=${encodeURIComponent(activeTable)}`;
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=${encodeURIComponent(url)}`;
   const handleCopy = () => { navigator?.clipboard?.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2500); };
-  return React.createElement("div", { className: "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" },
-    React.createElement("div", { className: "bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-3 my-8 anim-slide-up" },
-      React.createElement("div", { className: "flex justify-between items-center pb-2 border-b border-stone-200" },
-        React.createElement("h3", { className: "font-black text-sm" }, "📱 Table QR"),
-        React.createElement("button", { onClick: onClose, className: "w-7 h-7 rounded-full bg-stone-100 text-stone-500 text-sm font-bold" }, "✕")),
-      React.createElement("div", { className: "grid grid-cols-6 gap-1" },
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(t => React.createElement("button", {
-          key: t, onClick: () => { setTbl(t); setCustomTable(""); },
-          className: `py-1.5 rounded-lg text-[10px] font-bold border ${!customTable && tbl === t ? "bg-amber-600 text-white border-amber-600" : "bg-stone-50 border-stone-200 text-stone-700"}`
-        }, "T-" + t))),
-      React.createElement("input", { type: "text", placeholder: "Custom table name", value: customTable, onChange: e => setCustomTable(e.target.value), className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl px-3 py-2" }),
-      React.createElement("div", { id: "printable-qr-stand", className: "bg-gradient-to-b from-stone-900 to-black p-4 rounded-2xl text-center text-white shadow-xl space-y-2" },
-        React.createElement("span", { className: "text-[10px] font-black uppercase tracking-widest text-amber-400" }, restaurantName || "Restaurant"),
-        React.createElement("div", null, React.createElement("span", { className: "inline-block px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-black text-xs uppercase tracking-wider" }, "TABLE " + activeTable)),
-        React.createElement("div", { className: "bg-white p-2 rounded-2xl w-40 h-40 mx-auto" },
-          React.createElement("img", { src: qr, alt: "QR", className: "w-full h-full object-contain" })),
-        React.createElement("p", { className: "text-[10px] text-stone-300 font-bold" }, "📷 Scan to view menu")),
-      React.createElement("div", { className: "flex gap-1.5" },
-        React.createElement("input", { type: "text", readOnly: true, value: url, className: "flex-1 text-[10px] font-mono bg-stone-50 border border-stone-200 rounded-lg px-2 py-1.5 text-stone-700" }),
-        React.createElement("button", { onClick: handleCopy, className: `px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${copied ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"}` }, copied ? "✓" : "📋")),
-      React.createElement("div", { className: "grid grid-cols-2 gap-1.5" },
-        React.createElement("a", { href: url, target: "_blank", rel: "noopener", className: "py-2 rounded-lg bg-stone-100 text-stone-800 text-[10px] font-bold text-center" }, "🔗 Preview"),
-        React.createElement("button", { onClick: () => window.print(), className: "py-2 rounded-lg bg-stone-900 text-white text-[10px] font-bold" }, "🖨️ Print")),
-      onSelect && React.createElement("button", { onClick: () => { onSelect(rest, activeTable); onClose?.(); }, className: "w-full py-2 bg-stone-100 text-stone-700 rounded-lg text-[10px] font-semibold" }, "Apply")));
+  
+  return html`
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-3 my-8 anim-slide-up">
+        <div className="flex justify-between items-center pb-2 border-b border-stone-200">
+          <h3 className="font-black text-sm">📱 Table QR</h3>
+          <button onClick=${onClose} className="w-7 h-7 rounded-full bg-stone-100 text-stone-500 text-sm font-bold">✕</button>
+        </div>
+        <div className="grid grid-cols-6 gap-1">
+          ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(t => html`
+            <button key=${t} onClick=${() => { setTbl(t); setCustomTable(""); }} className=${`py-1.5 rounded-lg text-[10px] font-bold border ${!customTable && tbl === t ? "bg-amber-600 text-white border-amber-600" : "bg-stone-50 border-stone-200 text-stone-700"}`}>T-${t}</button>
+          `)}
+        </div>
+        <input type="text" placeholder="Custom table name" value=${customTable} onInput=${e => setCustomTable(e.target.value)} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl px-3 py-2" />
+        
+        <div id="printable-qr-stand" className="bg-gradient-to-b from-stone-900 to-black p-4 rounded-2xl text-center text-white shadow-xl space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">${restaurantName || "Restaurant"}</span>
+          <div><span className="inline-block px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-black text-xs uppercase tracking-wider">TABLE ${activeTable}</span></div>
+          <div className="bg-white p-2 rounded-2xl w-40 h-40 mx-auto">
+            <img src=${qr} alt="QR" className="w-full h-full object-contain" />
+          </div>
+          <p className="text-[10px] text-stone-300 font-bold">📷 Scan to view menu</p>
+        </div>
+        
+        <div className="flex gap-1.5">
+          <input type="text" readOnly value=${url} className="flex-1 text-[10px] font-mono bg-stone-50 border border-stone-200 rounded-lg px-2 py-1.5 text-stone-700" />
+          <button onClick=${handleCopy} className=${`px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${copied ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"}`}>${copied ? "✓" : "📋"}</button>
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          <a href=${url} target="_blank" rel="noopener" className="py-2 rounded-lg bg-stone-100 text-stone-800 text-[10px] font-bold text-center">🔗 Preview</a>
+          <button onClick=${() => window.print()} className="py-2 rounded-lg bg-stone-900 text-white text-[10px] font-bold">🖨️ Print</button>
+        </div>
+        ${onSelect && html`<button onClick=${() => { onSelect(rest, activeTable); onClose?.(); }} className="w-full py-2 bg-stone-100 text-stone-700 rounded-lg text-[10px] font-semibold">Apply</button>`}
+      </div>
+    </div>
+  `;
 }
 
 const container = document.getElementById("root");
-createRoot(container).render(React.createElement(App));
+createRoot(container).render(html`<${App} />`);
     </script>
   </body>
-</html>
+  </html>
