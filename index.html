@@ -3,69 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0c0a09" />
     <title>MyQRMenu - Digital QR Menu & Kitchen System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
     <style>
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      html, body { -webkit-tap-highlight-color: transparent; }
-      .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
-      @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-      .anim-slide-up { animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
       @media print {
         body * { visibility: hidden; }
         #printable-qr-stand, #printable-qr-stand * { visibility: visible; }
         #printable-qr-stand { position: absolute; left: 0; top: 0; width: 100%; }
       }
+      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes slide-in-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+      @keyframes zoom-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+      .animate-fade-in { animation: fade-in 0.3s ease-out; }
+      .animate-slide-up { animation: slide-up 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+      .animate-slide-in-right { animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+      .animate-zoom-in { animation: zoom-in 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+      .shadow-soft  { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03), 0 4px 12px -2px rgb(0 0 0 / 0.05); }
+      .shadow-card  { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 20px -4px rgb(0 0 0 / 0.06); }
+      .shadow-float { box-shadow: 0 10px 40px -8px rgb(0 0 0 / 0.15), 0 4px 16px -4px rgb(0 0 0 / 0.08); }
+      html { -webkit-tap-highlight-color: transparent; }
     </style>
-    <!-- Added 'htm' for safe JSX-like syntax -->
     <script type="importmap">
     {
       "imports": {
         "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "htm": "https://esm.sh/htm@3.1.1"
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
       }
     }
     </script>
   </head>
-  <body class="bg-stone-50 text-stone-900 min-h-screen overflow-x-hidden">
+  <body class="bg-stone-50 text-stone-900 min-h-screen antialiased">
     <div id="root">
-      <div class="min-h-screen flex items-center justify-center">
-        <div class="text-center p-6 space-y-3">
-          <div class="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p class="text-sm font-semibold text-stone-700">Connecting to MyQRMenu...</p>
+      <div class="min-h-screen flex items-center justify-center bg-stone-50">
+        <div class="text-center p-6 space-y-4">
+          <div class="relative w-14 h-14 mx-auto">
+            <div class="absolute inset-0 rounded-2xl bg-amber-100/70"></div>
+            <div class="absolute inset-0 rounded-2xl border-2 border-amber-600 border-t-transparent animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-xl">🍽️</div>
+          </div>
+          <div>
+            <p class="font-display font-extrabold text-stone-800 text-sm">MyQRMenu</p>
+            <p class="text-xs text-stone-500 mt-1">Preparing your digital menu...</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <script>
-      // Show errors on screen if app crashes so you are not stuck on loading forever
-      window.addEventListener('error', function(e) {
-          const root = document.getElementById("root");
-          if (root && root.innerHTML.includes("Connecting")) {
-              root.innerHTML = `
-              <div style="padding: 20px; color: #991b1b; font-family: monospace; background: #fef2f2; height: 100vh; overflow: auto;">
-                  <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">⚠️ App Crashed</h3>
-                  <pre style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #fca5a5; white-space: pre-wrap;">${e.message}</pre>
-                  <p style="margin-top: 10px;">File: ${e.filename}:${e.lineno}:${e.colno}</p>
-                  <p style="margin-top: 20px; font-size: 12px; color: #7f1d1d;">कृपया पेज रिफ्रेश करा किंवा कोड तपासा.</p>
-              </div>`;
-          }
-      });
-    </script>
-
     <script type="module">
 import { createRoot } from "react-dom/client";
 import React, { useState, useEffect, useMemo } from "react";
-import htm from "htm";
-
-const html = htm.bind(React.createElement);
-
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
-  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot
+  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 var firebaseConfig = {
@@ -83,128 +92,140 @@ try {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   db = getFirestore(app);
   isFirebaseAvailable = true;
-  console.log("✅ Firebase Firestore initialized");
+  console.log("✅ Firebase initialized");
 } catch (err) {
-  console.warn("⚠️ Firebase init warning:", err);
+  console.warn("⚠️ Firebase offline mode:", err);
   isFirebaseAvailable = false;
 }
 
 const DEFAULT_RESTAURANTS = [
-  { id: "rest-101", name: "Sagar's Cafe", tagline: "Fresh Brews, Delicious Bites & More", ownerPin: "111111", kitchenPin: "222222", subscriptionStatus: "ACTIVE", dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], isKitchenOpen: true },
-  { id: "rest-102", name: "Spice Craft Bistro", tagline: "Modern Indian Fusion & Tandoor Grill", ownerPin: "333333", kitchenPin: "444444", subscriptionStatus: "EXPIRED", dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], isKitchenOpen: true }
+  { id: "rest-101", name: "Sagar's Cafe", tagline: "Fresh Brews, Delicious Bites & More",
+    ownerPin: "111111", kitchenPin: "222222", subscriptionStatus: "ACTIVE",
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], isKitchenOpen: true },
+  { id: "rest-102", name: "Spice Craft Bistro", tagline: "Modern Indian Fusion & Tandoor Grill",
+    ownerPin: "333333", kitchenPin: "444444", subscriptionStatus: "EXPIRED",
+    dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], isKitchenOpen: true }
 ];
 
 function getDaysRemaining(dueDateStr) {
   if (!dueDateStr) return 0;
-  return Math.ceil((new Date(dueDateStr).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  const due = new Date(dueDateStr), now = new Date();
+  return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
-function readLS(key, fallback) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; } }
-function writeLS(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
-// ==========================================
-// MAIN APP ROOT
-// ==========================================
-function App() {
+// ============ MAIN APP ============
+export default function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const urlRestId = queryParams.get("restId") || queryParams.get("restaurantId") || "rest-101";
   const urlTable = parseInt(queryParams.get("table") || "5", 10);
-  const isStaffInitial = window.location.pathname.toLowerCase().replace(/\/+$/, "").endsWith("/staff") || queryParams.get("staff") === "true" || queryParams.get("view") === "staff";
+  const isStaffInitial =
+    window.location.pathname.toLowerCase().replace(/\/+$/, "").endsWith("/staff") ||
+    queryParams.get("staff") === "true" || queryParams.get("view") === "staff";
 
   const [currentRestId, setCurrentRestId] = useState(urlRestId);
   const [currentTable, setCurrentTable] = useState(urlTable);
   const [restaurants, setRestaurants] = useState(DEFAULT_RESTAURANTS);
   const [currentView, setCurrentView] = useState(isStaffInitial ? "login" : "customer");
+  const [userSession, setUserSession] = useState(null);
 
   useEffect(() => {
-    const check = () => {
+    const checkStaffRoute = () => {
       const sp = new URLSearchParams(window.location.search);
-      const isStaff = window.location.pathname.toLowerCase().replace(/\/+$/, "").endsWith("/staff") || sp.get("staff") === "true" || sp.get("view") === "staff";
+      const isStaff = window.location.pathname.toLowerCase().replace(/\/+$/, "").endsWith("/staff") ||
+        sp.get("staff") === "true" || sp.get("view") === "staff";
       if (isStaff) setCurrentView("login");
     };
-    check();
-    window.addEventListener("popstate", check);
-    return () => window.removeEventListener("popstate", check);
+    checkStaffRoute();
+    window.addEventListener("popstate", checkStaffRoute);
+    return () => window.removeEventListener("popstate", checkStaffRoute);
   }, []);
 
   useEffect(() => {
     if (!isFirebaseAvailable || !db) return;
     try {
-      const unsub = onSnapshot(collection(db, "restaurants"), (snap) => {
-        if (!snap.empty) {
-          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          setRestaurants(prev => {
+      const unsub = onSnapshot(collection(db, "restaurants"), (snapshot) => {
+        if (!snapshot.empty) {
+          const firestoreList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setRestaurants((prev) => {
             const map = new Map();
-            DEFAULT_RESTAURANTS.forEach(r => map.set(r.id, r));
-            prev.forEach(r => map.set(r.id, r));
-            list.forEach(r => map.set(r.id, { ...map.get(r.id), ...r }));
+            DEFAULT_RESTAURANTS.forEach((r) => map.set(r.id, r));
+            prev.forEach((r) => map.set(r.id, r));
+            firestoreList.forEach((r) => map.set(r.id, { ...map.get(r.id), ...r }));
             return Array.from(map.values());
           });
         }
-      }, err => console.warn("listener:", err));
+      }, (err) => console.warn("[App] restaurants listener:", err));
       return () => unsub();
-    } catch (e) { console.warn(e); }
+    } catch (err) { console.warn("[App] restaurants listener setup:", err); }
   }, []);
 
   const handleAddRestaurant = (newRest) => {
-    setRestaurants(prev => {
-      const exists = prev.some(r => r.id === newRest.id || (r.name && newRest.name && r.name.toLowerCase() === newRest.name.toLowerCase()));
-      if (exists) return prev.map(r => (r.id === newRest.id ? { ...r, ...newRest } : r));
+    setRestaurants((prev) => {
+      const exists = prev.some((r) => r.id === newRest.id ||
+        (r.name && newRest.name && r.name.toLowerCase() === newRest.name.toLowerCase()));
+      if (exists) return prev.map((r) => (r.id === newRest.id ? { ...r, ...newRest } : r));
       return [newRest, ...prev];
     });
   };
 
   const handleReturnToCustomer = () => {
-    if (window.location.pathname.toLowerCase().includes("/staff") || window.location.search.includes("view=staff") || window.location.search.includes("staff=true")) {
+    if (window.location.pathname.toLowerCase().includes("/staff") ||
+        window.location.search.includes("view=staff") ||
+        window.location.search.includes("staff=true")) {
       window.history.pushState({}, "", `/?restId=${currentRestId}&table=${currentTable}`);
     }
     setCurrentView("customer");
   };
 
   const currentRestaurant = useMemo(() => {
-    return restaurants.find(r => r.id === currentRestId) || {
-      id: currentRestId, name: "Restaurant " + currentRestId, tagline: "Live Dining & QR Ordering",
-      ownerPin: "111111", kitchenPin: "222222", subscriptionStatus: "ACTIVE",
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], isKitchenOpen: true
+    return restaurants.find((r) => r.id === currentRestId) || {
+      id: currentRestId, name: "Restaurant " + currentRestId,
+      tagline: "Live Dining & QR Ordering", ownerPin: "111111", kitchenPin: "222222",
+      subscriptionStatus: "ACTIVE",
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      isKitchenOpen: true,
     };
   }, [restaurants, currentRestId]);
 
   const handleRenewSubscription = async (restId) => {
-    const curr = restaurants.find(r => r.id === restId);
-    const currDue = curr?.dueDate ? new Date(curr.dueDate) : new Date();
-    const base = currDue > new Date() ? currDue : new Date();
-    const newDue = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    setRestaurants(prev => prev.map(r => r.id === restId ? { ...r, subscriptionStatus: "ACTIVE", dueDate: newDue } : r));
+    const currentRest = restaurants.find((r) => r.id === restId);
+    const currentDue = currentRest?.dueDate ? new Date(currentRest.dueDate) : new Date();
+    const baseDate = currentDue > new Date() ? currentDue : new Date();
+    const newDueDate = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    setRestaurants((prev) => prev.map((r) => r.id === restId ? { ...r, subscriptionStatus: "ACTIVE", dueDate: newDueDate } : r));
     if (isFirebaseAvailable && db) {
-      try { await updateDoc(doc(db, "restaurants", restId), { subscriptionStatus: "ACTIVE", dueDate: newDue }); }
-      catch (e) { console.warn(e); }
+      try { await updateDoc(doc(db, "restaurants", restId), { subscriptionStatus: "ACTIVE", dueDate: newDueDate }); }
+      catch (e) { console.warn("Renew Firestore:", e); }
     }
   };
 
-  return html`
-    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-100 selection:text-amber-900">
-      ${currentView === "customer" && html`<${CustomerView} restaurant=${currentRestaurant} tableNumber=${currentTable} />`}
-      
-      ${currentView === "login" && html`<${PinLoginModal} restaurants=${restaurants} defaultRestId=${currentRestId} onSuccess=${(session) => {
+  return React.createElement(
+    "div",
+    { className: "min-h-screen bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-100 selection:text-amber-900" },
+    currentView === "customer" && React.createElement(CustomerView, { restaurant: currentRestaurant, tableNumber: currentTable }),
+    currentView === "login" && React.createElement(PinLoginModal, {
+      restaurants, defaultRestId: currentRestId,
+      onSuccess: (session) => {
+        setUserSession(session);
         if (session.role === "admin") setCurrentView("admin");
         else if (session.role === "owner") { setCurrentRestId(session.restaurantId); setCurrentView("owner"); }
         else if (session.role === "kitchen") { setCurrentRestId(session.restaurantId); setCurrentView("kitchen"); }
-      }} onCancel=${handleReturnToCustomer} />`}
-
-      ${currentView === "owner" && html`<${OwnerDashboard} restaurant=${currentRestaurant} onLogout=${handleReturnToCustomer} />`}
-      ${currentView === "kitchen" && html`<${KitchenDashboard} restaurant=${currentRestaurant} onLogout=${handleReturnToCustomer} />`}
-      
-      ${currentView === "admin" && html`<${SuperAdminDashboard} restaurants=${restaurants} onRenew=${handleRenewSubscription} onAddRestaurant=${handleAddRestaurant} onLogout=${handleReturnToCustomer} setRestaurants=${setRestaurants} />`}
-    </div>
-  `;
+      },
+      onCancel: handleReturnToCustomer,
+    }),
+    currentView === "owner" && React.createElement(OwnerDashboard, { restaurant: currentRestaurant, onLogout: handleReturnToCustomer }),
+    currentView === "kitchen" && React.createElement(KitchenDashboard, { restaurant: currentRestaurant, onLogout: handleReturnToCustomer }),
+    currentView === "admin" && React.createElement(SuperAdminDashboard, {
+      restaurants, onRenew: handleRenewSubscription, onAddRestaurant: handleAddRestaurant,
+      onLogout: handleReturnToCustomer, setRestaurants
+    })
+  );
 }
 
-// ==========================================
-// CUSTOMER VIEW (Mobile App Feel)
-// ==========================================
+// ============ CUSTOMER VIEW ============
 function CustomerView({ restaurant, tableNumber }) {
-  const sp = new URLSearchParams(window.location.search);
-  const restaurantId = sp.get("restId") || sp.get("restaurantId") || (restaurant && restaurant.id) || "rest-101";
-  const ORDERS_KEY = `mymenu_orders_${restaurantId}_${tableNumber}`;
+  const searchParams = new URLSearchParams(window.location.search);
+  const restaurantId = searchParams.get("restId") || searchParams.get("restaurantId") || (restaurant && restaurant.id) || "rest-101";
 
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -218,10 +239,8 @@ function CustomerView({ restaurant, tableNumber }) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [activeOrderId, setActiveOrderId] = useState(null);
   const [liveOrderStatus, setLiveOrderStatus] = useState(null);
-  const [activeTab, setActiveTab] = useState("menu"); // menu | orders | info
-  const [myOrders, setMyOrders] = useState(() => readLS(ORDERS_KEY, []));
 
-  const mapDoc = (id, data) => ({
+  const mapDocToItem = (id, data) => ({
     id: id || data.id,
     name: data.name || data.title || "Untitled Dish",
     description: data.description || data.desc || "",
@@ -229,121 +248,128 @@ function CustomerView({ restaurant, tableNumber }) {
     category: data.category || "Mains",
     imageUrl: data.image || data.imageUrl || "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80",
     isVegetarian: data.type === "veg" || Boolean(data.isVegetarian),
-    isSpicy: Boolean(data.isSpicy),
     tag: data.isSpecial ? "Special" : data.tag || data.seasonalTag || null,
     prepTime: data.prepTime || "15 mins",
     available: data.available !== false,
   });
 
   useEffect(() => {
-    let unsub = () => {};
-    let mounted = true;
+    let unsubscribe = () => {};
+    let isMounted = true;
     setLoading(true);
-    const fetchREST = async () => {
+
+    const fetchViaRest = async () => {
       try {
-        const r = await fetch(`https://firestore.googleapis.com/v1/projects/menu-qr-b8765/databases/(default)/documents/restaurants/${restaurantId}/menuItems`);
-        const j = await r.json();
-        if (mounted) {
-          if (j.documents?.length) {
-            setMenuItems(j.documents.map(d => {
-              const f = d.fields || {}; const id = d.name.split("/").pop();
-              return mapDoc(id, {
-                name: f.name?.stringValue, description: f.description?.stringValue,
-                price: f.price?.doubleValue || parseFloat(f.price?.integerValue || 0),
-                category: f.category?.stringValue, image: f.image?.stringValue || f.imageUrl?.stringValue,
-                type: f.type?.stringValue, isSpecial: f.isSpecial?.booleanValue,
-                available: f.available?.booleanValue !== false
+        const res = await fetch(`https://firestore.googleapis.com/v1/projects/menu-qr-b8765/databases/(default)/documents/restaurants/${restaurantId}/menuItems`);
+        const json = await res.json();
+        if (isMounted) {
+          if (json.documents && json.documents.length > 0) {
+            const loaded = json.documents.map((d) => {
+              const fields = d.fields || {};
+              const id = d.name.split("/").pop();
+              return mapDocToItem(id, {
+                name: fields.name?.stringValue, description: fields.description?.stringValue,
+                price: fields.price?.doubleValue || parseFloat(fields.price?.integerValue || 0),
+                category: fields.category?.stringValue,
+                image: fields.image?.stringValue || fields.imageUrl?.stringValue,
+                type: fields.type?.stringValue, isSpecial: fields.isSpecial?.booleanValue,
+                available: fields.available?.booleanValue !== false,
               });
-            }));
+            });
+            setMenuItems(loaded);
           } else setMenuItems([]);
           setLoading(false);
         }
-      } catch (e) { if (mounted) { setMenuItems([]); setLoading(false); } }
+      } catch (err) { if (isMounted) { setMenuItems([]); setLoading(false); } }
     };
+
     if (isFirebaseAvailable && db) {
       try {
-        const ref = collection(db, "restaurants", restaurantId, "menuItems");
-        getDocs(ref).then(snap => {
-          if (!mounted) return;
-          if (!snap.empty) { setMenuItems(snap.docs.map(d => mapDoc(d.id, d.data()))); setLoading(false); }
-          else fetchREST();
-        }).catch(() => fetchREST());
-        unsub = onSnapshot(ref, snap => {
-          if (!mounted) return;
-          setMenuItems(snap.docs.map(d => mapDoc(d.id, d.data())));
-          setLoading(false);
-        }, () => fetchREST());
-      } catch { fetchREST(); }
-    } else fetchREST();
-    return () => { mounted = false; unsub(); };
+        const menuColRef = collection(db, "restaurants", restaurantId, "menuItems");
+        getDocs(menuColRef).then((snap) => {
+          if (!isMounted) return;
+          if (!snap.empty) { setMenuItems(snap.docs.map((d) => mapDocToItem(d.id, d.data()))); setLoading(false); }
+          else fetchViaRest();
+        }).catch(() => fetchViaRest());
+        unsubscribe = onSnapshot(menuColRef,
+          (snapshot) => {
+            if (!isMounted) return;
+            setMenuItems(snapshot.docs.map((d) => mapDocToItem(d.id, d.data())));
+            setLoading(false);
+          },
+          (err) => { console.warn("[CustomerView] snapshot:", err); fetchViaRest(); });
+      } catch (err) { fetchViaRest(); }
+    } else { fetchViaRest(); }
+    return () => { isMounted = false; unsubscribe(); };
   }, [restaurantId]);
 
   useEffect(() => {
     if (!activeOrderId || !isFirebaseAvailable || !db) return;
     try {
-      const ref = doc(db, "restaurants", restaurantId, "orders", activeOrderId);
-      const unsub = onSnapshot(ref, d => {
-        if (d.exists()) {
-          const data = d.data();
-          setLiveOrderStatus({ id: d.id, tokenNumber: data.tokenNumber || "TB-100", status: (data.status || "PENDING").toUpperCase() });
+      const orderRef = doc(db, "restaurants", restaurantId, "orders", activeOrderId);
+      const unsubOrder = onSnapshot(orderRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setLiveOrderStatus({ id: docSnap.id, tokenNumber: data.tokenNumber || "TB-100", status: (data.status || "PENDING").toUpperCase() });
         }
       });
-      return () => unsub();
-    } catch (e) { console.warn(e); }
+      return () => unsubOrder();
+    } catch (e) { console.warn("live tracker:", e); }
   }, [activeOrderId, restaurantId]);
 
   const categories = ["All", "Veg", "Non-Veg", "Mains", "Snacks", "Drinks", "Ice Cream", "Desserts"];
-  const filteredItems = useMemo(() => menuItems.filter(item => {
-    if (item.available === false) return false;
-    const s = searchQuery.toLowerCase();
-    const matchSearch = item.name.toLowerCase().includes(s) || item.description.toLowerCase().includes(s);
-    let matchCat = true;
-    if (selectedCategory === "All") matchCat = true;
-    else if (selectedCategory === "Veg") matchCat = item.isVegetarian === true;
-    else if (selectedCategory === "Non-Veg") matchCat = item.isVegetarian === false;
-    else matchCat = item.category === selectedCategory;
-    return matchCat && matchSearch;
-  }), [menuItems, selectedCategory, searchQuery]);
 
-  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
-  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const tax = subtotal * 0.05;
-  const total = subtotal + tax;
+  const filteredItems = useMemo(() => {
+    return menuItems.filter((item) => {
+      if (item.available === false) return false;
+      const q = searchQuery.toLowerCase();
+      const matchSearch = item.name.toLowerCase().includes(q) || item.description.toLowerCase().includes(q);
+      let matchCategory = true;
+      if (selectedCategory === "All") matchCategory = true;
+      else if (selectedCategory === "Veg") matchCategory = item.isVegetarian === true;
+      else if (selectedCategory === "Non-Veg") matchCategory = item.isVegetarian === false;
+      else matchCategory = item.category === selectedCategory;
+      return matchCategory && matchSearch;
+    });
+  }, [menuItems, selectedCategory, searchQuery]);
 
-  const addToCart = (item) => setCart(prev => {
-    const ex = prev.find(i => i.id === item.id);
-    if (ex) return prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
+  const cartItemCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartSubtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const taxAmount = cartSubtotal * 0.05;
+  const grandTotal = cartSubtotal + taxAmount;
+
+  const addToCart = (item) => setCart((prev) => {
+    const existing = prev.find((i) => i.id === item.id);
+    if (existing) return prev.map((i) => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
     return [...prev, { ...item, qty: 1 }];
   });
-  const updateQty = (id, delta) => setCart(prev => prev.map(i => {
-    if (i.id === id) { const q = i.qty + delta; return q > 0 ? { ...i, qty: q } : null; }
+
+  const updateCartQty = (id, delta) => setCart((prev) => prev.map((i) => {
+    if (i.id === id) { const n = i.qty + delta; return n > 0 ? { ...i, qty: n } : null; }
     return i;
   }).filter(Boolean));
 
   const handlePlaceOrder = async () => {
     if (cart.length === 0 || isOrderSubmitting) return;
     setIsOrderSubmitting(true);
-    const token = "TB-" + Math.floor(100 + Math.random() * 900);
-    const payload = {
-      tokenNumber: token, tableNumber: tableNumber || 1,
-      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
-      totalAmount: total, specialInstructions: specialInstructions.trim(),
-      status: "PENDING", createdAt: new Date().toISOString(), timestamp: Date.now()
+    const tokenNumber = "TB-" + Math.floor(100 + Math.random() * 900);
+    const orderPayload = {
+      tokenNumber, tableNumber: tableNumber || 1,
+      items: cart.map((i) => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+      totalAmount: grandTotal, specialInstructions: specialInstructions.trim(),
+      status: "PENDING", createdAt: new Date().toISOString(), timestamp: Date.now(),
     };
     let orderId = "ord_" + Date.now();
     if (isFirebaseAvailable && db) {
       try {
-        const ref = await addDoc(collection(db, "restaurants", restaurantId, "orders"), payload);
-        orderId = ref.id;
-      } catch (e) { console.warn(e); }
+        const docRef = await addDoc(collection(db, "restaurants", restaurantId, "orders"), orderPayload);
+        orderId = docRef.id;
+      } catch (err) { console.warn("Firestore order:", err); }
     }
-    const finalOrder = { id: orderId, ...payload };
-    const updatedMyOrders = [finalOrder, ...myOrders];
-    setMyOrders(updatedMyOrders);
-    writeLS(ORDERS_KEY, updatedMyOrders);
+    const finalOrder = { id: orderId, ...orderPayload };
     setPlacedOrder(finalOrder);
     setActiveOrderId(orderId);
-    setLiveOrderStatus({ id: orderId, tokenNumber: token, status: "PENDING" });
+    setLiveOrderStatus({ id: orderId, tokenNumber, status: "PENDING" });
     setIsOrderSubmitting(false);
     setIsCartOpen(false);
     setShowSuccessModal(true);
@@ -351,473 +377,551 @@ function CustomerView({ restaurant, tableNumber }) {
     setSpecialInstructions("");
   };
 
-  const statusColor = (s) => s === "PENDING" ? "bg-red-500" : s === "PREPARING" ? "bg-amber-500" : "bg-emerald-500";
-  const statusLabel = (s) => s === "PENDING" ? "Received" : s === "PREPARING" ? "Preparing" : "Served";
-
-  return html`
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 pb-24">
-      <!-- App Header -->
-      <header className="sticky top-0 z-30 bg-stone-50/90 backdrop-blur-xl border-b border-stone-200/60">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-base shadow-lg shadow-amber-500/20 shrink-0">
-              ${restaurant.name?.charAt(0) || "S"}
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-black text-sm text-stone-900 truncate leading-tight">${restaurant.name}</h1>
-              <div className="flex items-center gap-1.5 text-[10px] text-stone-500 mt-0.5">
-                <span className="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200/60">Table ${tableNumber}</span>
-                <span className="truncate">• ${restaurant.tagline || "Digital Menu"}</span>
-              </div>
-            </div>
-          </div>
-          <button onClick=${() => setActiveTab(activeTab === "info" ? "menu" : "info")} className="w-9 h-9 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm shadow-sm active:scale-95 transition-transform">
-            ℹ️
-          </button>
-        </div>
-      </header>
-
-      <!-- Live Order Tracker -->
-      ${liveOrderStatus && html`
-        <div className="max-w-lg mx-auto px-4 pt-3">
-          <div className="bg-stone-900 text-white rounded-2xl p-3.5 shadow-xl border border-amber-500/30 flex items-center justify-between gap-3 anim-slide-up">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400 flex items-center justify-center text-base shrink-0">📡</div>
-              <div className="min-w-0">
-                <div className="text-[9px] uppercase font-black tracking-widest text-amber-400">Live • ${liveOrderStatus.tokenNumber}</div>
-                <div className="text-xs font-black flex items-center gap-1.5 mt-0.5 truncate">
-                  <span className=${`w-2 h-2 rounded-full ${statusColor(liveOrderStatus.status)} animate-pulse`}></span>
-                  <span>${statusLabel(liveOrderStatus.status)} • ${liveOrderStatus.status}</span>
-                </div>
-              </div>
-            </div>
-            <button onClick=${() => setLiveOrderStatus(null)} className="text-[10px] bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg font-bold shrink-0">✕</button>
-          </div>
-        </div>
-      `}
-
-      <!-- Menu Tab -->
-      ${activeTab === "menu" && html`
-        <div className="max-w-lg mx-auto px-4 pt-4">
-          <div className="bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 rounded-3xl p-5 text-white shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-amber-500/20 blur-3xl"></div>
-            <div className="relative z-10">
-              <span className="inline-block bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">Contactless Dining</span>
-              <h2 className="text-xl font-black mt-2.5 tracking-tight leading-tight">Scan, Order & Enjoy!</h2>
-              <p className="text-[11px] text-stone-300 mt-1 leading-relaxed max-w-xs">Browse our chef-crafted menu and send your order to the kitchen.</p>
-              <div className="mt-3 inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15">
-                <span className="text-[9px] text-amber-300 uppercase tracking-widest font-bold">Seated at</span>
-                <span className="text-sm font-black font-mono">Table ${tableNumber}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
-          <div className="relative">
-            <span className="absolute left-3.5 top-3 text-stone-400 text-sm">🔍</span>
-            <input type="text" placeholder="Search dishes, drinks..." value=${searchQuery} onInput=${e => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-2xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm" />
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
-            ${categories.map(cat => html`
-              <button key=${cat} onClick=${() => setSelectedCategory(cat)} className=${`px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all whitespace-nowrap ${selectedCategory === cat ? "bg-stone-900 text-white shadow-md" : "bg-white border border-stone-200 text-stone-600"}`}>
-                ${cat}
-              </button>
-            `)}
-          </div>
-        </div>
-
-        <div className="max-w-lg mx-auto px-4 mt-4">
-          ${loading ? html`
-            <div className="py-16 text-center space-y-3">
-              <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-xs font-semibold text-stone-500">Loading menu...</p>
-            </div>
-          ` : filteredItems.length === 0 ? html`
-            <div className="p-10 text-center bg-white rounded-3xl border border-stone-200 space-y-2">
-              <span className="text-3xl">🍽️</span>
-              <h3 className="font-bold text-stone-800 text-sm">No dishes found</h3>
-              <p className="text-xs text-stone-500">Try adjusting your filters</p>
-            </div>
-          ` : html`
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              ${filteredItems.map(item => {
-                const inCart = cart.find(i => i.id === item.id);
-                const qty = inCart ? inCart.qty : 0;
-                return html`
-                  <div key=${item.id} className="bg-white rounded-2xl p-2.5 border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow flex gap-3 items-center active:scale-[0.99]">
-                    <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-stone-100 shrink-0">
-                      <img src=${item.imageUrl} alt=${item.name} className="w-full h-full object-cover" onError=${e => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; }} />
-                      ${item.tag && html`<span className="absolute top-1.5 left-1.5 bg-amber-500 text-stone-900 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full shadow">${item.tag}</span>`}
-                    </div>
-                    <div className="flex-1 min-w-0 py-0.5">
-                      <div className="flex items-start justify-between gap-1">
-                        <h3 className="font-black text-xs text-stone-900 truncate leading-tight">${item.name}</h3>
-                        <span className="text-xs font-extrabold text-amber-700 font-mono shrink-0">₹${Number(item.price).toFixed(0)}</span>
-                      </div>
-                      <p className="text-[10px] text-stone-500 line-clamp-2 mt-0.5 leading-relaxed">${item.description}</p>
-                      <div className="flex items-center justify-between mt-1.5">
-                        <div className="flex items-center gap-1.5 text-[9px] text-stone-400 font-medium">
-                          <span className=${`w-1.5 h-1.5 rounded-full ${item.isVegetarian ? "bg-emerald-500" : "bg-rose-500"}`}></span>
-                          <span>${item.isVegetarian ? "Veg" : "Non-Veg"}</span>
-                        </div>
-                        ${qty > 0 ? html`
-                          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg p-0.5">
-                            <button onClick=${() => updateQty(item.id, -1)} className="w-5 h-5 rounded-md bg-white text-stone-800 font-black text-[10px] flex items-center justify-center shadow-sm">−</button>
-                            <span className="font-black text-[10px] font-mono text-amber-900 min-w-[10px] text-center">${qty}</span>
-                            <button onClick=${() => updateQty(item.id, 1)} className="w-5 h-5 rounded-md bg-amber-600 text-white font-black text-[10px] flex items-center justify-center shadow-sm">+</button>
-                          </div>
-                        ` : html`
-                          <button onClick=${() => addToCart(item)} className="px-2.5 py-1 bg-stone-900 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold active:scale-95 transition-all">+ Add</button>
-                        `}
-                      </div>
-                    </div>
-                  </div>
-                `;
-              })}
-            </div>
-          `}
-        </div>
-      `}
-
-      <!-- Orders Tab -->
-      ${activeTab === "orders" && html`
-        <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
-          <h2 className="font-black text-lg text-stone-900">My Orders</h2>
-          <p className="text-xs text-stone-500 -mt-2">All orders placed from Table ${tableNumber}</p>
-          
-          ${myOrders.length === 0 ? html`
-            <div className="p-10 text-center bg-white rounded-3xl border border-stone-200 space-y-2">
-              <span className="text-4xl">📋</span>
-              <h3 className="font-bold text-stone-800 text-sm">No orders yet</h3>
-              <p className="text-xs text-stone-500">Place your first order from the menu</p>
-            </div>
-          ` : myOrders.map(o => html`
-            <div key=${o.id} className="bg-white rounded-2xl p-3.5 border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                <span className="font-black text-amber-700 font-mono text-sm">${o.tokenNumber}</span>
-                <span className=${`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${o.status === "COMPLETED" ? "bg-emerald-100 text-emerald-800" : o.status === "PREPARING" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>${o.status}</span>
-              </div>
-              <div className="mt-2 space-y-1">
-                ${o.items.map((i, idx) => html`
-                  <div key=${idx} className="flex justify-between text-[11px] text-stone-600">
-                    <span>${i.qty}× ${i.name}</span>
-                    <span className="font-mono">₹${(i.price * i.qty).toFixed(0)}</span>
-                  </div>
-                `)}
-              </div>
-              <div className="mt-2 pt-2 border-t border-stone-100 flex justify-between text-xs font-black text-stone-900">
-                <span>Total</span>
-                <span className="font-mono text-amber-700">₹${o.totalAmount.toFixed(0)}</span>
-              </div>
-            </div>
-          `)}
-        </div>
-      `}
-
-      <!-- Info Tab -->
-      ${activeTab === "info" && html`
-        <div className="max-w-lg mx-auto px-4 pt-4 space-y-3">
-          <h2 className="font-black text-lg text-stone-900">Restaurant Info</h2>
-          <div className="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm space-y-3">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-black text-2xl shadow-lg mx-auto">
-              ${restaurant.name?.charAt(0) || "R"}
-            </div>
-            <div className="text-center">
-              <h3 className="font-black text-base text-stone-900">${restaurant.name}</h3>
-              <p className="text-xs text-stone-500 mt-0.5">${restaurant.tagline || "Digital QR Dining"}</p>
-            </div>
-            <div className="pt-3 border-t border-stone-100 space-y-2 text-xs">
-              <div className="flex justify-between"><span className="text-stone-500">Table</span><span className="font-bold">Table ${tableNumber}</span></div>
-              <div className="flex justify-between"><span className="text-stone-500">Restaurant ID</span><span className="font-mono text-stone-700">${restaurantId}</span></div>
-              <div className="flex justify-between"><span className="text-stone-500">Total Orders</span><span className="font-bold">${myOrders.length}</span></div>
-            </div>
-          </div>
-          <button onClick=${() => window.location.href = "/?view=staff"} className="w-full py-3 bg-stone-900 text-white rounded-2xl font-bold text-xs shadow-lg active:scale-[0.98] transition-transform">
-            🔐 Staff Login
-          </button>
-        </div>
-      `}
-
-      <!-- Floating Cart -->
-      ${cartCount > 0 && activeTab === "menu" && html`
-        <div className="fixed bottom-24 left-4 right-4 max-w-lg mx-auto z-40 anim-slide-up">
-          <div onClick=${() => setIsCartOpen(true)} className="bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-2xl p-3 shadow-2xl flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform border border-stone-700/50">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-900 font-black text-xs flex items-center justify-center">${cartCount}</div>
-              <div>
-                <span className="font-bold text-xs block">${cartCount} item${cartCount > 1 ? "s" : ""}</span>
-                <span className="text-[10px] text-stone-400 font-mono">₹${subtotal.toFixed(0)} subtotal</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-sm font-mono text-amber-400">₹${total.toFixed(0)}</span>
-              <span className="bg-amber-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">View Cart →</span>
-            </div>
-          </div>
-        </div>
-      `}
-
-      <!-- Bottom Navigation -->
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 z-30 safe-bottom">
-        <div className="max-w-lg mx-auto grid grid-cols-3">
-          ${[
-            { id: "menu", icon: "🍽️", label: "Menu" },
-            { id: "orders", icon: "📋", label: "Orders" },
-            { id: "info", icon: "🏪", label: "Info" }
-          ].map(tab => html`
-            <button key=${tab.id} onClick=${() => setActiveTab(tab.id)} className=${`flex flex-col items-center gap-0.5 py-2.5 transition-colors relative ${activeTab === tab.id ? "text-amber-700" : "text-stone-400"}`}>
-              <span className="text-lg leading-none">${tab.icon}</span>
-              <span className="text-[10px] font-bold">${tab.label}</span>
-              ${tab.id === "orders" && myOrders.length > 0 && html`
-                <span className="absolute top-1 right-1/2 translate-x-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">${myOrders.length > 9 ? "9+" : myOrders.length}</span>
-              `}
-              ${activeTab === tab.id && html`<span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-amber-600 rounded-full"></span>`}
-            </button>
-          `)}
-        </div>
-      </nav>
-
-      <!-- Cart Sheet -->
-      ${isCartOpen && html`
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col anim-slide-up">
-            <div className="p-4 border-b border-stone-200 flex justify-between items-center">
-              <div>
-                <h2 className="font-black text-lg text-stone-900">Your Cart</h2>
-                <p className="text-xs text-stone-500">${restaurant.name} • Table ${tableNumber}</p>
-              </div>
-              <button onClick=${() => setIsCartOpen(false)} className="w-8 h-8 rounded-full bg-stone-100 text-stone-600 text-sm font-bold flex items-center justify-center">✕</button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              ${cart.length === 0 ? html`
-                <div className="py-20 text-center space-y-2">
-                  <span className="text-4xl">🛒</span>
-                  <p className="text-stone-700 font-bold text-sm">Cart is empty</p>
-                  <p className="text-xs text-stone-400">Add dishes to place an order</p>
-                </div>
-              ` : cart.map(item => html`
-                <div key=${item.id} className="flex justify-between items-center bg-stone-50 p-3 rounded-2xl border border-stone-200 text-xs">
-                  <div className="flex-1 min-w-0 pr-3">
-                    <h4 className="font-bold text-stone-900 truncate">${item.name}</h4>
-                    <p className="font-mono font-bold text-amber-700 text-[11px]">₹${(item.price * item.qty).toFixed(0)}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-white border border-stone-200 rounded-xl p-0.5">
-                    <button onClick=${() => updateQty(item.id, -1)} className="w-6 h-6 rounded-lg bg-stone-100 text-stone-800 font-black text-xs flex items-center justify-center">−</button>
-                    <span className="font-black text-xs font-mono text-stone-900 px-1">${item.qty}</span>
-                    <button onClick=${() => updateQty(item.id, 1)} className="w-6 h-6 rounded-lg bg-amber-600 text-white font-black text-xs flex items-center justify-center">+</button>
-                  </div>
-                </div>
-              `)}
-              
-              ${cart.length > 0 && html`
-                <div className="pt-2">
-                  <label className="text-xs font-bold text-stone-700 block mb-1">Special Instructions</label>
-                  <textarea rows="2" placeholder="e.g. Extra spicy, no onions..." value=${specialInstructions} onInput=${e => setSpecialInstructions(e.target.value)} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"></textarea>
-                </div>
-              `}
-            </div>
-
-            ${cart.length > 0 && html`
-              <div className="p-4 border-t border-stone-200 space-y-3 bg-stone-50">
-                <div className="space-y-1 text-xs text-stone-600">
-                  <div className="flex justify-between"><span>Subtotal</span><span className="font-mono font-bold">₹${subtotal.toFixed(0)}</span></div>
-                  <div className="flex justify-between"><span>Tax (5%)</span><span className="font-mono font-bold">₹${tax.toFixed(0)}</span></div>
-                  <div className="flex justify-between text-sm font-black text-stone-900 pt-1.5 border-t border-stone-200"><span>Total</span><span className="font-mono text-amber-700">₹${total.toFixed(0)}</span></div>
-                </div>
-                <button onClick=${handlePlaceOrder} disabled=${isOrderSubmitting} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-700 disabled:from-stone-300 disabled:to-stone-300 text-white font-black text-sm rounded-2xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
-                  ${isOrderSubmitting ? html`<span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Sending...` : `Place Order • ₹${total.toFixed(0)}`}
-                </button>
-              </div>
-            `}
-          </div>
-        </div>
-      `}
-
-      <!-- Success Modal -->
-      ${showSuccessModal && placedOrder && html`
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4 anim-slide-up">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-xl shadow-emerald-500/30">✓</div>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">Order Placed!</span>
-              <h2 className="text-2xl font-black text-stone-900 mt-2 font-mono">${placedOrder.tokenNumber}</h2>
-              <p className="text-xs text-stone-500 mt-1">Table ${placedOrder.tableNumber} • ${restaurant.name}</p>
-            </div>
-            <div className="bg-stone-50 rounded-2xl p-3 border border-stone-200 text-xs space-y-1.5 text-left">
-              <div className="font-bold text-stone-800 border-b border-stone-200 pb-1.5 flex justify-between text-[11px]">
-                <span>Summary</span><span className="font-mono text-amber-700">₹${placedOrder.totalAmount.toFixed(0)}</span>
-              </div>
-              ${placedOrder.items.map((i, idx) => html`
-                <div key=${idx} className="flex justify-between text-stone-600 text-[11px]">
-                  <span>${i.qty}× ${i.name}</span><span className="font-mono">₹${(i.price * i.qty).toFixed(0)}</span>
-                </div>
-              `)}
-            </div>
-            <button onClick=${() => setShowSuccessModal(false)} className="w-full py-3 bg-stone-900 text-white font-bold text-xs rounded-xl active:scale-[0.98] transition-transform">Close</button>
-          </div>
-        </div>
-      `}
-    </div>
-  `;
+  return React.createElement(
+    "div",
+    { className: "min-h-screen bg-stone-50 pb-32" },
+    // HEADER
+    React.createElement(
+      "header",
+      { className: "bg-white/85 backdrop-blur-xl border-b border-stone-200/70 sticky top-0 z-30" },
+      React.createElement(
+        "div",
+        { className: "max-w-4xl mx-auto px-4 py-3.5 flex justify-between items-center" },
+        React.createElement(
+          "div",
+          { className: "flex items-center gap-3" },
+          React.createElement("div", { className: "w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-display font-black text-lg shadow-md shadow-amber-600/20" },
+            restaurant.name ? restaurant.name.charAt(0) : "S"),
+          React.createElement(
+            "div",
+            null,
+            React.createElement("h1", { className: "font-display font-extrabold text-[15px] text-stone-900 leading-tight tracking-tight" }, restaurant.name),
+            React.createElement(
+              "div",
+              { className: "flex items-center gap-1.5 text-[11px] text-stone-500 mt-0.5" },
+              React.createElement("span", { className: "font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60" }, `Table ${tableNumber}`),
+              React.createElement("span", { className: "text-stone-300" }, "•"),
+              React.createElement("span", { className: "truncate max-w-[180px] font-medium" }, restaurant.tagline || "Digital Menu")
+            )
+          )
+        )
+      )
+    ),
+    // LIVE ORDER TRACKER
+    liveOrderStatus && React.createElement(
+      "div",
+      { className: "max-w-4xl mx-auto px-4 pt-4 animate-slide-up" },
+      React.createElement(
+        "div",
+        { className: "bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-white rounded-2xl p-4 shadow-float border border-amber-500/30 flex items-center justify-between gap-4" },
+        React.createElement(
+          "div",
+          { className: "flex items-center gap-3 min-w-0" },
+          React.createElement("div", { className: "w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400 flex items-center justify-center text-base shrink-0" }, "📡"),
+          React.createElement(
+            "div",
+            { className: "min-w-0" },
+            React.createElement("div", { className: "text-[9px] uppercase font-black tracking-[0.14em] text-amber-400/90" }, `Live Order • ${liveOrderStatus.tokenNumber}`),
+            React.createElement(
+              "div",
+              { className: "text-sm font-bold flex items-center gap-2 mt-1" },
+              liveOrderStatus.status === "PENDING" && React.createElement("span", { className: "text-red-300 flex items-center gap-2" }, React.createElement("span", { className: "w-2 h-2 rounded-full bg-red-400 animate-pulse" }), "Order Received"),
+              liveOrderStatus.status === "PREPARING" && React.createElement("span", { className: "text-amber-300 flex items-center gap-2" }, React.createElement("span", { className: "w-2 h-2 rounded-full bg-amber-400 animate-pulse" }), "Cooking in Kitchen"),
+              liveOrderStatus.status === "COMPLETED" && React.createElement("span", { className: "text-emerald-300 flex items-center gap-2" }, React.createElement("span", { className: "w-2 h-2 rounded-full bg-emerald-400" }), "Served")
+            )
+          )
+        ),
+        React.createElement("button", { onClick: () => setLiveOrderStatus(null), className: "text-[11px] bg-white/[0.08] hover:bg-white/[0.16] px-3 py-1.5 rounded-lg font-semibold transition-colors shrink-0" }, "Dismiss")
+      )
+    ),
+    // HERO
+    React.createElement(
+      "div",
+      { className: "max-w-4xl mx-auto px-4 pt-5" },
+      React.createElement(
+        "div",
+        { className: "relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 p-6 md:p-7 text-white shadow-float" },
+        React.createElement("div", { className: "absolute -top-16 -right-16 w-48 h-48 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" }),
+        React.createElement("div", { className: "absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-amber-600/10 blur-3xl pointer-events-none" }),
+        React.createElement(
+          "div",
+          { className: "relative flex flex-col md:flex-row items-center justify-between gap-6" },
+          React.createElement(
+            "div",
+            { className: "space-y-2.5 text-center md:text-left" },
+            React.createElement(
+              "span",
+              { className: "inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-400/30 text-amber-200 text-[10px] font-black uppercase tracking-[0.14em] px-3 py-1 rounded-full" },
+              React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" }),
+              "Contactless QR Dining"
+            ),
+            React.createElement("h2", { className: "font-display text-2xl md:text-3xl font-extrabold tracking-tight leading-tight" },
+              "Scan, Order ", React.createElement("span", { className: "text-amber-400" }, "& Enjoy!")),
+            React.createElement("p", { className: "text-xs text-stone-300/90 max-w-md leading-relaxed font-medium" },
+              "Browse our chef-crafted menu, customize your order, and send it directly to the kitchen in real-time.")
+          ),
+          React.createElement(
+            "div",
+            { className: "bg-white/[0.06] backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 text-center shrink-0" },
+            React.createElement("span", { className: "text-[9px] text-amber-300/80 uppercase tracking-[0.14em] font-bold block" }, "You are seated at"),
+            React.createElement("span", { className: "font-display text-3xl font-extrabold text-white block mt-1 leading-none" }, tableNumber),
+            React.createElement("span", { className: "text-[10px] text-stone-400 font-medium mt-1.5 block" }, "Table Number")
+          )
+        )
+      )
+    ),
+    // SEARCH + CATEGORIES
+    React.createElement(
+      "div",
+      { className: "max-w-4xl mx-auto px-4 mt-6 space-y-4" },
+      React.createElement(
+        "div",
+        { className: "relative w-full sm:w-80" },
+        React.createElement("span", { className: "absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm" }, "🔍"),
+        React.createElement("input", {
+          type: "text", placeholder: "Search dishes, drinks...", value: searchQuery,
+          onChange: (e) => setSearchQuery(e.target.value),
+          className: "w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200/90 rounded-xl text-xs font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 shadow-soft transition-all"
+        })
+      ),
+      React.createElement(
+        "div",
+        { className: "flex gap-2 overflow-x-auto no-scrollbar py-1 -mx-1 px-1" },
+        categories.map((cat) => React.createElement(
+          "button",
+          { key: cat, onClick: () => setSelectedCategory(cat),
+            className: `px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              selectedCategory === cat
+                ? "bg-stone-900 text-white shadow-md shadow-stone-900/10"
+                : "bg-white border border-stone-200/90 text-stone-600 hover:border-stone-300 hover:bg-stone-50"
+            }` },
+          cat
+        ))
+      )
+    ),
+    // MENU GRID
+    React.createElement(
+      "div",
+      { className: "max-w-4xl mx-auto px-4 mt-5" },
+      loading
+        ? React.createElement("div", { className: "py-20 text-center space-y-3" },
+            React.createElement("div", { className: "w-9 h-9 border-[3px] border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" }),
+            React.createElement("p", { className: "text-xs font-semibold text-stone-500" }, "Loading delicious menu items..."))
+        : filteredItems.length === 0
+        ? React.createElement("div", { className: "p-12 text-center bg-white rounded-3xl border border-stone-200/90 space-y-3 shadow-soft" },
+            React.createElement("span", { className: "text-4xl block" }, "🍽️"),
+            React.createElement("h3", { className: "font-display font-bold text-stone-800 text-sm" }, "No dishes found"),
+            React.createElement("p", { className: "text-xs text-stone-500" }, "Try clearing your search filters or check back soon."))
+        : React.createElement(
+            "div",
+            { className: "grid grid-cols-1 sm:grid-cols-2 gap-3.5" },
+            filteredItems.map((item) => {
+              const cartItem = cart.find((i) => i.id === item.id);
+              const qtyInCart = cartItem ? cartItem.qty : 0;
+              return React.createElement(
+                "div",
+                { key: item.id, className: "group bg-white rounded-2xl p-3 border border-stone-200/80 hover:border-amber-300/80 hover:shadow-card transition-all flex gap-3.5 items-center" },
+                React.createElement(
+                  "div",
+                  { className: "relative w-[88px] h-[88px] sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-stone-100 shrink-0" },
+                  React.createElement("img", {
+                    src: item.imageUrl, alt: item.name,
+                    className: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-500",
+                    onError: (e) => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; }
+                  }),
+                  item.tag && React.createElement("span", { className: "absolute top-1.5 left-1.5 bg-amber-500 text-stone-900 text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded-md shadow-sm tracking-wide" }, item.tag)
+                ),
+                React.createElement(
+                  "div",
+                  { className: "flex-1 min-w-0 flex flex-col justify-between py-0.5" },
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "flex items-start justify-between gap-2" },
+                      React.createElement("h3", { className: "font-display font-bold text-[13.5px] text-stone-900 truncate leading-snug" }, item.name),
+                      React.createElement("span", { className: "text-[13px] font-extrabold text-amber-700 font-mono shrink-0 leading-snug" }, `₹${Number(item.price).toFixed(0)}`)
+                    ),
+                    React.createElement("p", { className: "text-[11px] text-stone-500 line-clamp-2 mt-1 leading-relaxed" }, item.description)
+                  ),
+                  React.createElement(
+                    "div",
+                    { className: "flex items-center justify-between mt-2.5 pt-2 border-t border-stone-100" },
+                    React.createElement("div", { className: "flex items-center gap-1.5 text-[10px] text-stone-500 font-medium" },
+                      React.createElement("span", { className: `w-1.5 h-1.5 rounded-full ${item.isVegetarian ? "bg-emerald-500" : "bg-rose-500"}` }),
+                      React.createElement("span", null, item.isVegetarian ? "Veg" : "Non-Veg"),
+                      React.createElement("span", { className: "text-stone-300" }, "•"),
+                      React.createElement("span", null, item.prepTime)
+                    ),
+                    qtyInCart > 0
+                      ? React.createElement("div", { className: "flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg p-0.5" },
+                          React.createElement("button", { onClick: () => updateCartQty(item.id, -1), className: "w-6 h-6 rounded-md bg-white text-stone-800 font-black text-xs shadow-sm flex items-center justify-center hover:bg-amber-100 transition-colors" }, "−"),
+                          React.createElement("span", { className: "font-bold text-xs font-mono text-amber-900 px-1 min-w-[16px] text-center" }, qtyInCart),
+                          React.createElement("button", { onClick: () => updateCartQty(item.id, 1), className: "w-6 h-6 rounded-md bg-amber-600 text-white font-black text-xs shadow-sm flex items-center justify-center hover:bg-amber-700 transition-colors" }, "+")
+                        )
+                      : React.createElement("button", { onClick: () => addToCart(item), className: "px-3 py-1.5 bg-stone-900 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition-colors shadow-sm" }, "+ Add")
+                  )
+                )
+              );
+            })
+          )
+    ),
+    // FLOATING CART BAR
+    cartItemCount > 0 && React.createElement(
+      "div",
+      { className: "fixed bottom-4 left-4 right-4 max-w-xl mx-auto z-40 animate-slide-up" },
+      React.createElement(
+        "div",
+        { onClick: () => setIsCartOpen(true),
+          className: "bg-stone-900 text-white rounded-2xl p-3.5 shadow-float flex items-center justify-between cursor-pointer hover:bg-stone-800 transition-all border border-stone-700/80" },
+        React.createElement("div", { className: "flex items-center gap-3" },
+          React.createElement("div", { className: "w-9 h-9 rounded-xl bg-amber-500 text-stone-900 font-black text-sm flex items-center justify-center shadow-inner" }, cartItemCount),
+          React.createElement("div", null,
+            React.createElement("span", { className: "font-bold text-xs block leading-tight" }, `${cartItemCount} item${cartItemCount > 1 ? "s" : ""} selected`),
+            React.createElement("span", { className: "text-[10px] text-stone-400 font-mono" }, `Subtotal: ₹${cartSubtotal.toFixed(0)}`)
+          )
+        ),
+        React.createElement("div", { className: "flex items-center gap-2.5" },
+          React.createElement("span", { className: "font-black text-sm font-mono text-amber-400" }, `₹${grandTotal.toFixed(0)}`),
+          React.createElement("span", { className: "bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow-sm transition-colors" }, "View Cart →")
+        )
+      )
+    ),
+    // CART DRAWER
+    isCartOpen && React.createElement(
+      "div",
+      { className: "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-fade-in" },
+      React.createElement(
+        "div",
+        { className: "bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between p-5 overflow-y-auto animate-slide-in-right" },
+        React.createElement(
+          "div",
+          { className: "space-y-4" },
+          React.createElement(
+            "div",
+            { className: "flex justify-between items-center pb-3 border-b border-stone-200/80" },
+            React.createElement("div", null,
+              React.createElement("h2", { className: "font-display font-extrabold text-lg text-stone-900" }, "Your Order Bag"),
+              React.createElement("p", { className: "text-[11px] text-stone-500 mt-0.5" }, `${restaurant.name} • Table ${tableNumber}`)
+            ),
+            React.createElement("button", { onClick: () => setIsCartOpen(false), className: "w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-bold flex items-center justify-center transition-colors" }, "✕")
+          ),
+          cart.length === 0
+            ? React.createElement("div", { className: "py-20 text-center space-y-2" },
+                React.createElement("span", { className: "text-4xl block" }, "🛒"),
+                React.createElement("p", { className: "text-stone-800 font-display font-bold text-sm" }, "Your cart is empty"),
+                React.createElement("p", { className: "text-xs text-stone-400" }, "Add delicious dishes from the menu to place an order."))
+            : React.createElement(
+                "div",
+                { className: "space-y-2.5 pt-2" },
+                cart.map((item) => React.createElement(
+                  "div",
+                  { key: item.id, className: "flex justify-between items-center bg-stone-50/70 p-3 rounded-xl border border-stone-200/80 text-xs" },
+                  React.createElement("div", { className: "flex-1 min-w-0 pr-3" },
+                    React.createElement("h4", { className: "font-bold text-stone-900 truncate text-[13px]" }, item.name),
+                    React.createElement("p", { className: "font-mono font-bold text-amber-700 text-[11px] mt-0.5" }, `₹${(item.price * item.qty).toFixed(0)}`)
+                  ),
+                  React.createElement("div", { className: "flex items-center gap-1.5 bg-white border border-stone-200 rounded-lg p-0.5 shadow-sm" },
+                    React.createElement("button", { onClick: () => updateCartQty(item.id, -1), className: "w-6 h-6 rounded-md bg-stone-100 text-stone-800 font-black text-xs flex items-center justify-center hover:bg-stone-200 transition-colors" }, "−"),
+                    React.createElement("span", { className: "font-bold text-xs font-mono text-stone-900 px-1 min-w-[16px] text-center" }, item.qty),
+                    React.createElement("button", { onClick: () => updateCartQty(item.id, 1), className: "w-6 h-6 rounded-md bg-amber-600 text-white font-black text-xs flex items-center justify-center hover:bg-amber-700 transition-colors" }, "+")
+                  )
+                )),
+                React.createElement(
+                  "div",
+                  { className: "pt-3 space-y-1.5" },
+                  React.createElement("label", { className: "text-[11px] font-bold text-stone-700 uppercase tracking-wider" }, "Special Kitchen Instructions"),
+                  React.createElement("textarea", {
+                    rows: "2", placeholder: "e.g. Extra spicy, no onions, allergies...",
+                    value: specialInstructions,
+                    onChange: (e) => setSpecialInstructions(e.target.value),
+                    className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 font-medium transition-all resize-none"
+                  })
+                )
+              )
+        ),
+        cart.length > 0 && React.createElement(
+          "div",
+          { className: "space-y-3.5 pt-4 border-t border-stone-200/80 mt-3" },
+          React.createElement(
+            "div",
+            { className: "space-y-1.5 text-xs text-stone-600" },
+            React.createElement("div", { className: "flex justify-between" },
+              React.createElement("span", null, "Items Subtotal"),
+              React.createElement("span", { className: "font-mono font-semibold text-stone-800" }, `₹${cartSubtotal.toFixed(0)}`)),
+            React.createElement("div", { className: "flex justify-between" },
+              React.createElement("span", null, "Service Tax & GST (5%)"),
+              React.createElement("span", { className: "font-mono font-semibold text-stone-800" }, `₹${taxAmount.toFixed(0)}`)),
+            React.createElement("div", { className: "flex justify-between text-sm font-black text-stone-900 pt-2.5 border-t border-stone-200/80" },
+              React.createElement("span", { className: "font-display" }, "Total Amount"),
+              React.createElement("span", { className: "font-mono text-amber-700" }, `₹${grandTotal.toFixed(0)}`))
+          ),
+          React.createElement(
+            "button",
+            { onClick: handlePlaceOrder, disabled: isOrderSubmitting,
+              className: "w-full py-3.5 bg-amber-600 hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-lg shadow-amber-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]" },
+            isOrderSubmitting
+              ? React.createElement("span", { className: "flex items-center gap-2" },
+                  React.createElement("span", { className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" }),
+                  React.createElement("span", null, "Sending to Kitchen..."))
+              : React.createElement("span", null, `Place Order • ₹${grandTotal.toFixed(0)}`)
+          )
+        )
+      )
+    ),
+    // SUCCESS MODAL
+    showSuccessModal && placedOrder && React.createElement(
+      "div",
+      { className: "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" },
+      React.createElement(
+        "div",
+        { className: "bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl text-center space-y-5 animate-zoom-in" },
+        React.createElement("div", { className: "w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-black shadow-lg shadow-emerald-500/30" }, "✓"),
+        React.createElement("div", null,
+          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60" }, "Order Sent to Kitchen"),
+          React.createElement("h2", { className: "font-display text-3xl font-extrabold text-stone-900 mt-3 tracking-tight" }, placedOrder.tokenNumber),
+          React.createElement("p", { className: "text-xs text-stone-500 mt-1.5 font-medium" }, `Table ${placedOrder.tableNumber} • ${restaurant.name}`)
+        ),
+        React.createElement(
+          "div",
+          { className: "bg-stone-50 rounded-2xl p-4 border border-stone-200/80 text-xs space-y-2.5 text-left" },
+          React.createElement("div", { className: "font-bold text-stone-800 border-b border-stone-200/80 pb-2 flex justify-between text-[11px] uppercase tracking-wider" },
+            React.createElement("span", null, "Order Summary"),
+            React.createElement("span", { className: "font-mono text-amber-700" }, `₹${placedOrder.totalAmount.toFixed(0)}`)),
+          React.createElement("div", { className: "space-y-1.5 max-h-36 overflow-y-auto pr-1" },
+            placedOrder.items.map((i, idx) => React.createElement("div", { key: idx, className: "flex justify-between text-stone-600 text-[12px]" },
+              React.createElement("span", null, `${i.qty}× ${i.name}`),
+              React.createElement("span", { className: "font-mono font-semibold" }, `₹${(i.price * i.qty).toFixed(0)}`)
+            ))
+          ),
+          placedOrder.specialInstructions && React.createElement("div", { className: "pt-2 text-[11px] text-amber-800 italic border-t border-stone-200/80 mt-1" }, `Note: "${placedOrder.specialInstructions}"`)
+        ),
+        React.createElement("button", { onClick: () => setShowSuccessModal(false),
+          className: "w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-sm transition-colors active:scale-[0.98]" }, "Close & View Menu")
+      )
+    )
+  );
 }
 
-// ==========================================
-// KITCHEN DASHBOARD (NO SCROLL)
-// ==========================================
+// ============ KITCHEN DASHBOARD ============
 function KitchenDashboard({ restaurant, onLogout }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const targetRestId = (restaurant && restaurant.id) || "rest-101";
-  const [clock, setClock] = useState(new Date());
 
   useEffect(() => {
-    const t = setInterval(() => setClock(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
+    let unsubscribe = () => {};
+    let isMounted = true;
+    setLoading(true);
 
-  useEffect(() => {
-    let unsub = () => {}; let mounted = true; setLoading(true);
-    const parse = (id, data) => ({
-      id, tokenNumber: data.tokenNumber || `TB-${id.slice(0, 4)}`,
+    const parseOrderData = (id, data) => ({
+      id,
+      tokenNumber: data.tokenNumber || `TB-${id.slice(0, 4)}`,
       tableNumber: data.tableNumber || 1,
       items: Array.isArray(data.items) ? data.items : [],
       totalAmount: typeof data.totalAmount === "number" ? data.totalAmount : parseFloat(data.totalAmount) || 0,
       status: (data.status || "PENDING").toUpperCase(),
       specialInstructions: data.specialInstructions || "",
-      createdAt: data.createdAt || "", timestamp: data.timestamp || 0,
+      createdAt: data.createdAt || "",
+      timestamp: data.timestamp || 0,
     });
-    const fetchREST = async () => {
+
+    const fetchViaRest = async () => {
       try {
-        const r = await fetch(`https://firestore.googleapis.com/v1/projects/menu-qr-b8765/databases/(default)/documents/restaurants/${targetRestId}/orders`);
-        const j = await r.json();
-        if (mounted && j.documents?.length) {
-          const loaded = j.documents.map(d => {
-            const f = d.fields || {}; const id = d.name.split("/").pop();
-            const items = f.items?.arrayValue?.values?.map(v => {
-              const mf = v.mapValue?.fields || {};
-              return { id: mf.id?.stringValue || "", name: mf.name?.stringValue || "Item", price: mf.price?.doubleValue || parseFloat(mf.price?.integerValue || 0) || 0, qty: parseInt(mf.qty?.integerValue || "1", 10) };
+        const res = await fetch(`https://firestore.googleapis.com/v1/projects/menu-qr-b8765/databases/(default)/documents/restaurants/${targetRestId}/orders`);
+        const json = await res.json();
+        if (isMounted && json.documents && json.documents.length > 0) {
+          const loaded = json.documents.map((d) => {
+            const fields = d.fields || {};
+            const id = d.name.split("/").pop();
+            const items = fields.items?.arrayValue?.values?.map((v) => {
+              const f = v.mapValue?.fields || {};
+              return { id: f.id?.stringValue || "", name: f.name?.stringValue || "Item",
+                price: f.price?.doubleValue || parseFloat(f.price?.integerValue || 0) || 0,
+                qty: parseInt(f.qty?.integerValue || "1", 10) };
             }) || [];
-            return { id, tokenNumber: f.tokenNumber?.stringValue || `TB-${id.slice(0, 4)}`, tableNumber: parseInt(f.tableNumber?.integerValue || f.tableNumber?.stringValue || "1", 10), items, totalAmount: f.totalAmount?.doubleValue || parseFloat(f.totalAmount?.integerValue || 0) || 0, status: (f.status?.stringValue || "PENDING").toUpperCase(), specialInstructions: f.specialInstructions?.stringValue || "", createdAt: f.createdAt?.stringValue || "", timestamp: parseInt(f.timestamp?.integerValue || "0", 10) };
-          }).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            return {
+              id, tokenNumber: fields.tokenNumber?.stringValue || `TB-${id.slice(0, 4)}`,
+              tableNumber: parseInt(fields.tableNumber?.integerValue || fields.tableNumber?.stringValue || "1", 10),
+              items, totalAmount: fields.totalAmount?.doubleValue || parseFloat(fields.totalAmount?.integerValue || 0) || 0,
+              status: (fields.status?.stringValue || "PENDING").toUpperCase(),
+              specialInstructions: fields.specialInstructions?.stringValue || "",
+              createdAt: fields.createdAt?.stringValue || "",
+              timestamp: parseInt(fields.timestamp?.integerValue || "0", 10),
+            };
+          });
+          loaded.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
           setOrders(loaded); setLoading(false);
-        } else if (mounted) { setOrders([]); setLoading(false); }
-      } catch { if (mounted) setLoading(false); }
+        } else if (isMounted) { setOrders([]); setLoading(false); }
+      } catch (err) { if (isMounted) setLoading(false); }
     };
+
     if (isFirebaseAvailable && db) {
       try {
-        const ref = collection(db, "restaurants", targetRestId, "orders");
-        getDocs(ref).then(snap => {
-          if (!mounted) return;
-          if (!snap.empty) { const l = snap.docs.map(d => parse(d.id, d.data())).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); setOrders(l); setLoading(false); }
-          else fetchREST();
-        }).catch(() => fetchREST());
-        unsub = onSnapshot(ref, snap => {
-          if (!mounted) return;
-          const l = snap.docs.map(d => parse(d.id, d.data())).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-          setOrders(l); setLoading(false);
-        }, () => fetchREST());
-      } catch { fetchREST(); }
-    } else fetchREST();
-    return () => { mounted = false; unsub(); };
+        const ordersCol = collection(db, "restaurants", targetRestId, "orders");
+        getDocs(ordersCol).then((snap) => {
+          if (!isMounted) return;
+          if (!snap.empty) {
+            const loaded = snap.docs.map((d) => parseOrderData(d.id, d.data()));
+            loaded.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            setOrders(loaded); setLoading(false);
+          } else fetchViaRest();
+        }).catch(() => fetchViaRest());
+        unsubscribe = onSnapshot(ordersCol,
+          (snapshot) => {
+            if (!isMounted) return;
+            const live = snapshot.docs.map((d) => parseOrderData(d.id, d.data()));
+            live.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            setOrders(live); setLoading(false);
+          },
+          (err) => { console.warn("[Kitchen] snapshot:", err); fetchViaRest(); });
+      } catch (err) { fetchViaRest(); }
+    } else { fetchViaRest(); }
+
+    return () => { isMounted = false; unsubscribe(); };
   }, [targetRestId]);
 
-  const updateStatus = async (id, newStatus) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+  const updateStatus = async (orderId, newStatus) => {
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: newStatus } : o));
     if (isFirebaseAvailable && db) {
-      try { await updateDoc(doc(db, "restaurants", targetRestId, "orders", id), { status: newStatus }); }
-      catch (e) { console.warn(e); }
+      try {
+        await updateDoc(doc(db, "restaurants", targetRestId, "orders", orderId), { status: newStatus });
+      } catch (err) { console.warn("Kitchen updateDoc:", err); }
     }
   };
 
-  const pending = orders.filter(o => o.status === "PENDING");
-  const preparing = orders.filter(o => o.status === "PREPARING");
-  const completed = orders.filter(o => o.status === "COMPLETED");
+  const pendingOrders = orders.filter((o) => o.status === "PENDING");
+  const preparingOrders = orders.filter((o) => o.status === "PREPARING");
+  const completedOrders = orders.filter((o) => o.status === "COMPLETED");
 
-  return html`
-    <div className="h-screen bg-stone-950 text-stone-100 flex flex-col overflow-hidden font-sans">
-      <header className="shrink-0 px-4 py-2 border-b border-stone-800/80 bg-stone-900/50 backdrop-blur flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-sm shrink-0">🍳</div>
-          <div className="min-w-0">
-            <h1 className="text-sm font-black text-white truncate leading-tight">Kitchen Display</h1>
-            <p className="text-[10px] text-stone-500 truncate">${restaurant.name}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="text-right hidden sm:block">
-            <div className="text-[9px] text-stone-500 uppercase tracking-wider font-bold">LIVE</div>
-            <div className="text-xs font-mono font-black text-amber-400">${clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-          </div>
-          <button onClick=${onLogout} className="px-2.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-[10px] font-bold transition">Exit</button>
-        </div>
-      </header>
-
-      <div className="flex-1 grid grid-cols-3 gap-2 p-2 min-h-0 overflow-hidden">
-        <${KitchenColumn} title="PENDING" color="amber" count=${pending.length} orders=${pending} loading=${loading} actionLabel="Start →" actionColor="bg-amber-600 hover:bg-amber-500" onAction=${(id) => updateStatus(id, "PREPARING")} emptyText="No pending orders" />
-        <${KitchenColumn} title="PREPARING" color="blue" count=${preparing.length} orders=${preparing} actionLabel="Ready ✓" actionColor="bg-emerald-600 hover:bg-emerald-500" onAction=${(id) => updateStatus(id, "COMPLETED")} emptyText="No dishes on grill" />
-        <${KitchenColumn} title="COMPLETED" color="emerald" count=${completed.length} orders=${completed} actionLabel="Re-open" actionColor="bg-stone-700 hover:bg-stone-600" onAction=${(id) => updateStatus(id, "PREPARING")} emptyText="No completed tickets" isDone=${true} />
-      </div>
-    </div>
-  `;
+  return React.createElement(
+    "div",
+    { className: "min-h-screen bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 text-stone-100 p-4 md:p-6 flex flex-col font-sans" },
+    React.createElement(
+      "header",
+      { className: "flex flex-wrap items-center justify-between pb-4 border-b border-stone-800/80 gap-4" },
+      React.createElement("div", null,
+        React.createElement("div", { className: "flex items-center gap-2.5" },
+          React.createElement("span", { className: "text-2xl" }, "🍳"),
+          React.createElement("h1", { className: "font-display text-2xl font-extrabold tracking-tight text-white" }, "Kitchen Display"),
+          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded" }, "KOT")
+        ),
+        React.createElement("p", { className: "text-[11px] text-stone-400 font-medium mt-1 ml-1" }, `${restaurant.name} • Live stream`)
+      ),
+      React.createElement("button", { onClick: onLogout,
+        className: "px-3.5 py-1.5 rounded-lg bg-stone-800/80 hover:bg-stone-800 text-stone-300 text-xs font-semibold transition-colors border border-stone-700/50" }, "Exit Kitchen")
+    ),
+    React.createElement(
+      "div",
+      { className: "grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 flex-1 items-start" },
+      // PENDING
+      React.createElement(
+        "div",
+        { className: "bg-stone-900/60 backdrop-blur-sm rounded-2xl p-4 border border-stone-800 flex flex-col min-h-[500px]" },
+        React.createElement(
+          "div",
+          { className: "flex items-center justify-between pb-3 border-b border-stone-800/80" },
+          React.createElement("h2", { className: "text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2" },
+            React.createElement("span", { className: "relative flex h-2 w-2" },
+              React.createElement("span", { className: "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" }),
+              React.createElement("span", { className: "relative inline-flex rounded-full h-2 w-2 bg-amber-400" })),
+            "Pending"),
+          React.createElement("span", { className: "text-[10px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30" }, pendingOrders.length)
+        ),
+        React.createElement(
+          "div",
+          { className: "mt-3 space-y-3 flex-1 overflow-y-auto" },
+          loading ? React.createElement("div", { className: "text-center py-12 text-stone-500 text-xs" }, "Loading orders...")
+            : pendingOrders.length === 0 ? React.createElement("p", { className: "text-xs text-stone-500 text-center py-8" }, "No incoming orders")
+            : pendingOrders.map((o) => React.createElement(KitchenOrderCard, { key: o.id, order: o, actionLabel: "Start Cooking →", onAction: () => updateStatus(o.id, "PREPARING"), actionColor: "bg-amber-600 hover:bg-amber-500" }))
+        )
+      ),
+      // PREPARING
+      React.createElement(
+        "div",
+        { className: "bg-stone-900/60 backdrop-blur-sm rounded-2xl p-4 border border-stone-800 flex flex-col min-h-[500px]" },
+        React.createElement(
+          "div",
+          { className: "flex items-center justify-between pb-3 border-b border-stone-800/80" },
+          React.createElement("h2", { className: "text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-2" },
+            React.createElement("span", { className: "w-2 h-2 rounded-full bg-blue-400 animate-pulse" }),
+            "Preparing"),
+          React.createElement("span", { className: "text-[10px] font-black bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-md border border-blue-500/30" }, preparingOrders.length)
+        ),
+        React.createElement(
+          "div",
+          { className: "mt-3 space-y-3 flex-1 overflow-y-auto" },
+          preparingOrders.length === 0 ? React.createElement("p", { className: "text-xs text-stone-500 text-center py-8" }, "No dishes currently on grill")
+            : preparingOrders.map((o) => React.createElement(KitchenOrderCard, { key: o.id, order: o, actionLabel: "Mark Ready ✓", onAction: () => updateStatus(o.id, "COMPLETED"), actionColor: "bg-emerald-600 hover:bg-emerald-500" }))
+        )
+      ),
+      // COMPLETED
+      React.createElement(
+        "div",
+        { className: "bg-stone-900/60 backdrop-blur-sm rounded-2xl p-4 border border-stone-800 flex flex-col min-h-[500px]" },
+        React.createElement(
+          "div",
+          { className: "flex items-center justify-between pb-3 border-b border-stone-800/80" },
+          React.createElement("h2", { className: "text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2" },
+            React.createElement("span", { className: "w-2 h-2 rounded-full bg-emerald-400" }),
+            "Completed"),
+          React.createElement("span", { className: "text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30" }, completedOrders.length)
+        ),
+        React.createElement(
+          "div",
+          { className: "mt-3 space-y-3 flex-1 overflow-y-auto" },
+          completedOrders.length === 0 ? React.createElement("p", { className: "text-xs text-stone-500 text-center py-8" }, "No completed tickets yet")
+            : completedOrders.slice(0, 15).map((o) => React.createElement(
+                "div",
+                { key: o.id, className: "bg-stone-950/60 rounded-xl p-3 border border-stone-800/60 text-xs opacity-80 space-y-1.5" },
+                React.createElement("div", { className: "flex justify-between items-center text-stone-400 font-mono text-[11px]" },
+                  React.createElement("span", { className: "font-bold text-white" }, o.tokenNumber),
+                  React.createElement("span", null, `Table ${o.tableNumber}`)),
+                React.createElement("p", { className: "text-stone-300 text-[11px] leading-relaxed" }, o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")),
+                React.createElement(
+                  "div",
+                  { className: "flex items-center justify-between pt-1.5 border-t border-stone-800/60 text-[10px]" },
+                  React.createElement("span", { className: "font-mono text-stone-400" }, `₹${o.totalAmount.toFixed(0)}`),
+                  React.createElement("button", { onClick: () => updateStatus(o.id, "PREPARING"), className: "text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors" }, "Re-open")
+                )
+              ))
+        )
+      )
+    )
+  );
 }
 
-function KitchenColumn({ title, color, count, orders, loading, actionLabel, actionColor, onAction, emptyText, isDone }) {
-  const cMap = {
-    amber: { text: "text-amber-400", bg: "bg-amber-500", border: "border-amber-500/30" },
-    blue: { text: "text-blue-400", bg: "bg-blue-500", border: "border-blue-500/30" },
-    emerald: { text: "text-emerald-400", bg: "bg-emerald-500", border: "border-emerald-500/30" }
-  };
-  const c = cMap[color];
-  return html`
-    <div className="bg-stone-900/60 rounded-xl border border-stone-800 flex flex-col min-h-0 overflow-hidden">
-      <div className=${`shrink-0 px-3 py-2 border-b border-stone-800 flex items-center justify-between ${c.border}`}>
-        <div className="flex items-center gap-1.5">
-          <span className=${`w-1.5 h-1.5 rounded-full ${c.bg} ${color === "amber" ? "animate-pulse" : ""}`}></span>
-          <span className=${`text-[10px] font-black uppercase tracking-wider ${c.text}`}>${title}</span>
-        </div>
-        <span className=${`text-[10px] font-black px-1.5 py-0.5 rounded-md bg-stone-800 ${c.text}`}>${count}</span>
-      </div>
-      <div className="flex-1 overflow-y-auto no-scrollbar p-1.5 space-y-1.5 min-h-0">
-        ${loading ? html`<div className="text-center py-8 text-stone-500 text-[10px]">Loading...</div>`
-        : orders.length === 0 ? html`<p className="text-[10px] text-stone-500 text-center py-6">${emptyText}</p>`
-        : orders.slice(0, isDone ? 20 : 50).map(o => html`
-            <${CompactOrderCard} key=${o.id} order=${o} actionLabel=${actionLabel} actionColor=${actionColor} onAction=${() => onAction(o.id)} isDone=${isDone} />
-          `)}
-      </div>
-    </div>
-  `;
+function KitchenOrderCard({ order, actionLabel, onAction, actionColor }) {
+  return React.createElement(
+    "div",
+    { className: "bg-stone-950/70 rounded-xl p-3.5 border border-stone-800/80 shadow-lg space-y-2.5" },
+    React.createElement(
+      "div",
+      { className: "flex justify-between items-center border-b border-stone-800/60 pb-2" },
+      React.createElement("span", { className: "font-black text-amber-400 font-mono text-sm tracking-wide" }, order.tokenNumber),
+      React.createElement("span", { className: "bg-stone-800/80 text-stone-200 text-[10px] px-2 py-0.5 rounded-md font-bold border border-stone-700/60" }, `Table ${order.tableNumber}`)
+    ),
+    React.createElement(
+      "div",
+      { className: "space-y-1 py-1" },
+      order.items.map((i, idx) => React.createElement(
+        "div",
+        { key: idx, className: "flex justify-between text-[12px] text-stone-200" },
+        React.createElement("span", { className: "font-medium" },
+          React.createElement("span", { className: "text-amber-400 font-bold" }, `${i.qty}×`), ` ${i.name}`),
+        React.createElement("span", { className: "text-stone-400 font-mono text-[11px]" }, `₹${(i.price * i.qty).toFixed(0)}`)
+      ))
+    ),
+    order.specialInstructions && React.createElement("div", { className: "bg-amber-950/40 rounded-lg p-2 text-[11px] text-amber-200 border-l-2 border-amber-500 leading-relaxed" }, `⚠️ ${order.specialInstructions}`),
+    React.createElement(
+      "div",
+      { className: "pt-1.5 flex items-center justify-between text-[10.5px] text-stone-500 font-mono border-t border-stone-800/60" },
+      React.createElement("span", null, `Total ₹${order.totalAmount.toFixed(0)}`),
+      React.createElement("span", null, order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "")
+    ),
+    React.createElement("button", { onClick: onAction,
+      className: `w-full py-2 rounded-lg text-white font-bold text-xs transition-all shadow-sm active:scale-[0.98] ${actionColor}` }, actionLabel)
+  );
 }
 
-function CompactOrderCard({ order, actionLabel, actionColor, onAction, isDone }) {
-  const time = order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-  return html`
-    <div className=${`bg-stone-900 rounded-lg p-2 border border-stone-800 hover:border-stone-700 transition ${isDone ? "opacity-70" : ""}`}>
-      <div className="flex items-center justify-between gap-1 mb-1">
-        <span className="font-black text-amber-400 font-mono text-[11px] truncate">${order.tokenNumber}</span>
-        <span className="bg-stone-800 text-stone-200 text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">T${order.tableNumber}</span>
-        ${time && html`<span className="text-[9px] text-stone-500 font-mono shrink-0">${time}</span>`}
-      </div>
-      <div className="text-[10px] text-stone-300 leading-tight mb-1.5 line-clamp-2">
-        ${order.items.map((i, idx) => html`
-          <span key=${idx}><span className="text-amber-400 font-bold">${i.qty}×</span> ${i.name}${idx < order.items.length - 1 ? ", " : ""}</span>
-        `)}
-      </div>
-      ${order.specialInstructions && html`
-        <div className="bg-amber-900/40 text-amber-200 text-[9px] rounded px-1.5 py-0.5 mb-1.5 truncate border-l-2 border-amber-500">⚠ ${order.specialInstructions}</div>
-      `}
-      <div className="flex items-center justify-between pt-1 border-t border-stone-800/80">
-        <span className="text-[10px] text-stone-400 font-mono font-bold">₹${order.totalAmount.toFixed(0)}</span>
-        <button onClick=${onAction} className=${`px-2 py-0.5 rounded text-white font-black text-[9px] transition ${actionColor}`}>${actionLabel}</button>
-      </div>
-    </div>
-  `;
-}
-
-// ==========================================
-// OWNER DASHBOARD
-// ==========================================
+// ============ OWNER DASHBOARD ============
 function OwnerDashboard({ restaurant, onLogout }) {
   const [menuItems, setMenuItems] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -825,245 +929,291 @@ function OwnerDashboard({ restaurant, onLogout }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const targetRestId = (restaurant && restaurant.id) || "rest-101";
+
   const [newItem, setNewItem] = useState({
     name: "", description: "", price: "", type: "Veg", category: "Mains",
     image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80",
     isSpecial: false, available: true,
   });
+
   const isExpired = restaurant.subscriptionStatus === "EXPIRED";
   const daysLeft = getDaysRemaining(restaurant.dueDate);
 
   useEffect(() => {
-    let unsubs = []; let mounted = true; setLoading(true);
+    let unsubs = [];
+    let isMounted = true;
+    setLoading(true);
     if (isFirebaseAvailable && db) {
       try {
-        unsubs.push(onSnapshot(collection(db, "restaurants", targetRestId, "menuItems"), snap => {
-          if (!mounted) return;
-          setMenuItems(snap.docs.map(d => ({ id: d.id, available: true, ...d.data() })));
+        const menuColRef = collection(db, "restaurants", targetRestId, "menuItems");
+        unsubs.push(onSnapshot(menuColRef, (snapshot) => {
+          if (!isMounted) return;
+          setMenuItems(snapshot.docs.map((d) => ({ id: d.id, available: true, ...d.data() })));
         }));
-        unsubs.push(onSnapshot(collection(db, "restaurants", targetRestId, "orders"), snap => {
-          if (!mounted) return;
-          setOrders(snap.docs.map(d => ({
+        const ordersColRef = collection(db, "restaurants", targetRestId, "orders");
+        unsubs.push(onSnapshot(ordersColRef, (snapshot) => {
+          if (!isMounted) return;
+          setOrders(snapshot.docs.map((d) => ({
             id: d.id,
             totalAmount: typeof d.data().totalAmount === "number" ? d.data().totalAmount : parseFloat(d.data().totalAmount) || 0,
             status: (d.data().status || "PENDING").toUpperCase(),
-            createdAt: d.data().createdAt || "", timestamp: d.data().timestamp || 0
+            createdAt: d.data().createdAt || "",
+            timestamp: d.data().timestamp || 0,
           })));
           setLoading(false);
         }));
-      } catch { setLoading(false); }
-    } else setLoading(false);
-    return () => { mounted = false; unsubs.forEach(u => u()); };
+      } catch (e) { setLoading(false); }
+    } else { setLoading(false); }
+    return () => { isMounted = false; unsubs.forEach((u) => u()); };
   }, [targetRestId]);
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const todayOrders = orders.filter(o => o.createdAt && o.createdAt.startsWith(todayStr));
-  const todayRev = todayOrders.reduce((s, o) => s + o.totalAmount, 0);
-  const pendingC = orders.filter(o => o.status === "PENDING").length;
-  const prepC = orders.filter(o => o.status === "PREPARING").length;
-  const doneC = orders.filter(o => o.status === "COMPLETED").length;
+  const todaysOrders = orders.filter((o) => o.createdAt && o.createdAt.startsWith(todayStr));
+  const todaysRevenue = todaysOrders.reduce((s, o) => s + o.totalAmount, 0);
+  const pendingCount = orders.filter((o) => o.status === "PENDING").length;
+  const preparingCount = orders.filter((o) => o.status === "PREPARING").length;
+  const completedCount = orders.filter((o) => o.status === "COMPLETED").length;
 
-  const handleClearHistory = async () => {
-    if (!confirm("Clear all order history?")) return;
+  const handleClearOrderHistory = async () => {
+    if (!window.confirm("Clear all order history?")) return;
     setOrders([]);
     if (isFirebaseAvailable && db) {
       try {
         const snap = await getDocs(collection(db, "restaurants", targetRestId, "orders"));
-        await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "restaurants", targetRestId, "orders", d.id))));
-      } catch (e) { console.warn(e); }
+        await Promise.all(snap.docs.map((d) => deleteDoc(doc(db, "restaurants", targetRestId, "orders", d.id))));
+      } catch (err) { console.warn("Clear history:", err); }
     }
   };
 
   const handleAddItem = async (e) => {
     e.preventDefault();
     if (!newItem.name || !newItem.price) return;
-    const data = { ...newItem, price: parseFloat(newItem.price) || 0, isVegetarian: newItem.type === "Veg", available: true, createdAt: new Date().toISOString(), timestamp: Date.now() };
+    const itemData = { ...newItem, price: parseFloat(newItem.price) || 0,
+      isVegetarian: newItem.type === "Veg", available: true,
+      createdAt: new Date().toISOString(), timestamp: Date.now() };
     if (isFirebaseAvailable && db) {
-      try { await addDoc(collection(db, "restaurants", targetRestId, "menuItems"), data); }
-      catch (e) { console.warn(e); }
+      try { await addDoc(collection(db, "restaurants", targetRestId, "menuItems"), itemData); }
+      catch (err) { console.warn("addDoc:", err); }
     }
     setShowAddModal(false);
-    setNewItem({ name: "", description: "", price: "", type: "Veg", category: "Mains", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80", isSpecial: false, available: true });
+    setNewItem({ name: "", description: "", price: "", type: "Veg", category: "Mains",
+      image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80",
+      isSpecial: false, available: true });
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteItem = async (itemId) => {
     if (isFirebaseAvailable && db) {
-      try { await deleteDoc(doc(db, "restaurants", targetRestId, "menuItems", id)); }
-      catch (e) { console.warn(e); }
+      try { await deleteDoc(doc(db, "restaurants", targetRestId, "menuItems", itemId)); }
+      catch (err) { console.warn("deleteDoc:", err); }
     }
-    setMenuItems(prev => prev.filter(i => i.id !== id));
+    setMenuItems((prev) => prev.filter((i) => i.id !== itemId));
   };
 
-  const handleToggle = async (id, current) => {
-    const next = current === false ? true : false;
-    setMenuItems(prev => prev.map(i => i.id === id ? { ...i, available: next } : i));
+  const handleToggleAvailability = async (itemId, currentAvailability) => {
+    const next = currentAvailability === false ? true : false;
+    setMenuItems((prev) => prev.map((i) => i.id === itemId ? { ...i, available: next } : i));
     if (isFirebaseAvailable && db) {
-      try { await updateDoc(doc(db, "restaurants", targetRestId, "menuItems", id), { available: next }); }
-      catch (e) { console.warn(e); }
+      try { await updateDoc(doc(db, "restaurants", targetRestId, "menuItems", itemId), { available: next }); }
+      catch (err) { console.warn("toggle:", err); }
     }
   };
 
-  return html`
-    <div className="max-w-3xl mx-auto p-4 md:p-6 min-h-screen font-sans">
-      <header className="flex justify-between items-center pb-4 border-b border-stone-200 mb-5 gap-3">
-        <div>
-          <h1 className="text-xl font-black text-stone-900">${restaurant.name}</h1>
-          <p className="text-[11px] text-stone-500">Owner Suite</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick=${() => setShowQrModal(true)} className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform">📱 QR</button>
-          <button onClick=${onLogout} className="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold">Exit</button>
-        </div>
-      </header>
-
-      ${!isExpired && html`
-        <div className="space-y-3 mb-6">
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm">
-              <span className="text-[10px] text-stone-500 font-semibold">Revenue</span>
-              <p className="text-xl font-black text-amber-700 font-mono mt-0.5">₹${todayRev.toFixed(0)}</p>
-            </div>
-            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm">
-              <span className="text-[10px] text-stone-500 font-semibold">Orders</span>
-              <p className="text-xl font-black text-stone-900 mt-0.5">${todayOrders.length}</p>
-            </div>
-            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-[10px] text-stone-500 font-semibold block">History</span>
-                <span className="text-xs font-bold text-stone-800">${orders.length} total</span>
-              </div>
-              <button onClick=${handleClearHistory} className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg border border-red-200">Clear</button>
-            </div>
-          </div>
-          <div className="bg-stone-900 text-white p-3 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">🍳 Live Kitchen</span>
-            <div className="flex items-center gap-3 text-[10px] font-bold">
-              <span className="text-red-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>${pendingC} Pending</span>
-              <span className="text-amber-300 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${prepC} Preparing</span>
-              <span className="text-emerald-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${doneC} Done</span>
-            </div>
-          </div>
-        </div>
-      `}
-
-      <div className="mb-5">
-        ${isExpired
-          ? html`
-            <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-black text-red-600">🚨 Subscription Expired</h2>
-                <p className="text-[11px] text-red-800 mt-0.5">Expired ${restaurant.dueDate}. Renew to unlock.</p>
-              </div>
-              <button onClick=${() => alert("Renewal request sent!")} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-[11px] font-bold">Renew</button>
-            </div>
-          `
-          : html`
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-3">
-              <div>
-                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Active</span>
-                <h3 className="text-sm font-black text-emerald-900 mt-1">Until ${restaurant.dueDate}</h3>
-                <p className="text-[10px] text-emerald-700">${daysLeft > 0 ? daysLeft + " days left" : "Expires today"}</p>
-              </div>
-              <button onClick=${() => alert("Plan is active")} className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-[11px] font-bold">Extend</button>
-            </div>
-          `
-        }
-      </div>
-
-      ${isExpired
-        ? html`
-          <div className="p-10 text-center bg-stone-100 rounded-3xl border border-stone-300">
-            <span className="text-4xl">🔒</span>
-            <h3 className="text-base font-bold text-stone-800 mt-2">Dashboard Locked</h3>
-            <p className="text-xs text-stone-500 max-w-sm mx-auto mt-1">Renew subscription to edit menu.</p>
-          </div>
-        `
-        : html`
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-base font-black text-stone-800">Menu (${menuItems.length})</h2>
-                <p className="text-[11px] text-stone-500">Live catalog</p>
-              </div>
-              <button onClick=${() => setShowAddModal(true)} className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold shadow-sm">+ Add Dish</button>
-            </div>
-            
-            ${loading ? html`<div className="py-10 text-center text-xs text-stone-500">Loading...</div>`
-            : menuItems.length === 0 ? html`
-              <div className="p-10 text-center bg-white rounded-3xl border border-dashed border-stone-300">
-                <span className="text-3xl">🍲</span>
-                <p className="font-bold text-sm text-stone-700 mt-2">No menu items</p>
-                <p className="text-xs text-stone-500">Click '+ Add Dish' to create your first item</p>
-              </div>
-            ` : html`
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                ${menuItems.map(item => {
-                  const avail = item.available !== false;
-                  return html`
-                    <div key=${item.id} className="bg-white rounded-2xl p-2.5 border border-stone-200 shadow-sm flex gap-2.5 items-center relative">
-                      ${!avail && html`<div className="absolute top-1.5 right-1.5 bg-rose-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">Hidden</div>`}
-                      <img src=${item.image || item.imageUrl} alt=${item.name} className=${`w-16 h-16 rounded-xl object-cover bg-stone-100 ${!avail ? 'grayscale opacity-60' : ''}`} onError=${e => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; }} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-1">
-                          <h4 className="font-bold text-xs text-stone-900 truncate">${item.name}</h4>
-                          <span className="font-extrabold text-amber-700 text-xs font-mono shrink-0">₹${Number(item.price).toFixed(0)}</span>
-                        </div>
-                        <p className="text-[10px] text-stone-400">${item.category}</p>
-                        <div className="mt-1.5 pt-1.5 border-t border-stone-100 flex justify-between items-center">
-                          <label className="flex items-center gap-1 cursor-pointer text-stone-600 font-bold select-none text-[9px]">
-                            <input type="checkbox" checked=${avail} onChange=${() => handleToggle(item.id, avail)} className="rounded border-stone-300 text-amber-600 focus:ring-amber-500 w-3 h-3" />
-                            Show
-                          </label>
-                          <button onClick=${() => handleDelete(item.id)} className="text-[10px] text-red-500 hover:text-red-700 font-semibold">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                  `;
-                })}
-              </div>
-            `}
-          </div>
-        `
-      }
-
-      ${showAddModal && html`
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit=${handleAddItem} className="bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-2.5 anim-slide-up">
-            <h3 className="text-base font-black text-stone-900">Add Dish</h3>
-            <input required type="text" value=${newItem.name} onInput=${e => setNewItem({ ...newItem, name: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" placeholder="Dish name" />
-            <input required type="number" step="0.01" value=${newItem.price} onInput=${e => setNewItem({ ...newItem, price: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" placeholder="Price ₹" />
-            <div className="grid grid-cols-2 gap-2">
-              <select value=${newItem.type} onChange=${e => setNewItem({ ...newItem, type: e.target.value })} className="text-xs bg-stone-50 border border-stone-200 rounded-xl p-3">
-                <option>Veg</option><option>Non-Veg</option>
-              </select>
-              <select value=${newItem.category} onChange=${e => setNewItem({ ...newItem, category: e.target.value })} className="text-xs bg-stone-50 border border-stone-200 rounded-xl p-3">
-                ${["Mains", "Snacks", "Drinks", "Ice Cream", "Desserts"].map(c => html`<option key=${c}>${c}</option>`)}
-              </select>
-            </div>
-            <input type="url" value=${newItem.image} onInput=${e => setNewItem({ ...newItem, image: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" placeholder="Image URL" />
-            <textarea value=${newItem.description} onInput=${e => setNewItem({ ...newItem, description: e.target.value })} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-3" rows="2" placeholder="Description"></textarea>
-            <label className="flex items-center gap-2 text-xs text-stone-700 font-medium">
-              <input type="checkbox" checked=${newItem.isSpecial} onChange=${e => setNewItem({ ...newItem, isSpecial: e.target.checked })} />
-              Special / Chef's Pick
-            </label>
-            <div className="flex justify-end gap-2 pt-2">
-              <button type="button" onClick=${() => setShowAddModal(false)} className="px-4 py-2 bg-stone-100 text-stone-700 rounded-xl text-xs font-bold">Cancel</button>
-              <button type="submit" className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold">Save</button>
-            </div>
-          </form>
-        </div>
-      `}
-
-      ${showQrModal && html`
-        <${TableQrGeneratorModal} currentRestId=${targetRestId} currentTable=${5} restaurantName=${restaurant.name} onClose=${() => setShowQrModal(false)} />
-      `}
-    </div>
-  `;
+  return React.createElement(
+    "div",
+    { className: "max-w-5xl mx-auto p-4 md:p-6 min-h-screen font-sans" },
+    React.createElement(
+      "header",
+      { className: "flex flex-wrap justify-between items-center pb-5 border-b border-stone-200/80 mb-6 gap-3" },
+      React.createElement("div", null,
+        React.createElement("div", { className: "flex items-center gap-2 mb-1" },
+          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md" }, "Owner"),
+          React.createElement("span", { className: "text-[11px] text-stone-500 font-medium" }, targetRestId)
+        ),
+        React.createElement("h1", { className: "font-display text-2xl font-extrabold text-stone-900 tracking-tight" }, restaurant.name)
+      ),
+      React.createElement("div", { className: "flex items-center gap-2" },
+        React.createElement("button", { onClick: () => setShowQrModal(true),
+          className: "px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors" },
+          React.createElement("span", null, "📱"),
+          React.createElement("span", { className: "hidden sm:inline" }, "Table QR")),
+        React.createElement("button", { onClick: onLogout,
+          className: "px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors" }, "Exit")
+      )
+    ),
+    !isExpired && React.createElement(
+      "div",
+      { className: "space-y-4 mb-6" },
+      React.createElement(
+        "div",
+        { className: "grid grid-cols-1 sm:grid-cols-3 gap-3" },
+        React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-stone-200/80 shadow-soft" },
+          React.createElement("div", { className: "flex items-center gap-2 mb-1" },
+            React.createElement("span", { className: "w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs" }, "💰"),
+            React.createElement("span", { className: "text-[11px] text-stone-500 font-semibold uppercase tracking-wider" }, "Today's Revenue")),
+          React.createElement("p", { className: "text-2xl font-extrabold text-amber-700 font-mono tracking-tight" }, `₹${todaysRevenue.toFixed(0)}`)),
+        React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-stone-200/80 shadow-soft" },
+          React.createElement("div", { className: "flex items-center gap-2 mb-1" },
+            React.createElement("span", { className: "w-7 h-7 rounded-lg bg-stone-100 text-stone-700 flex items-center justify-center text-xs" }, "🧾"),
+            React.createElement("span", { className: "text-[11px] text-stone-500 font-semibold uppercase tracking-wider" }, "Today's Orders")),
+          React.createElement("p", { className: "text-2xl font-extrabold text-stone-900 tracking-tight" }, todaysOrders.length)),
+        React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-stone-200/80 shadow-soft flex items-center justify-between" },
+          React.createElement("div", null,
+            React.createElement("span", { className: "text-[11px] text-stone-500 font-semibold uppercase tracking-wider block" }, "History"),
+            React.createElement("span", { className: "text-xs font-bold text-stone-800" }, `${orders.length} saved`)),
+          React.createElement("button", { onClick: handleClearOrderHistory,
+            className: "px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg border border-red-200/70 transition-colors" }, "Clear"))
+      ),
+      React.createElement(
+        "div",
+        { className: "bg-gradient-to-r from-stone-900 to-stone-800 text-white p-4 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-3" },
+        React.createElement("div", { className: "flex items-center gap-2" },
+          React.createElement("span", { className: "text-lg" }, "🍳"),
+          React.createElement("span", { className: "font-black text-[11px] uppercase tracking-wider text-amber-400" }, "Live Kitchen")),
+        React.createElement("div", { className: "flex items-center gap-4 text-[11px] font-bold" },
+          React.createElement("span", { className: "text-red-400 flex items-center gap-1.5" }, React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" }), `${pendingCount} Pending`),
+          React.createElement("span", { className: "text-amber-300 flex items-center gap-1.5" }, React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-amber-400" }), `${preparingCount} Preparing`),
+          React.createElement("span", { className: "text-emerald-400 flex items-center gap-1.5" }, React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-emerald-400" }), `${completedCount} Done`))
+      )
+    ),
+    React.createElement(
+      "div",
+      { className: "mb-6" },
+      isExpired
+        ? React.createElement("div", { className: "p-4 rounded-2xl bg-red-50 border border-red-300 text-red-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-3" },
+            React.createElement("div", null,
+              React.createElement("h2", { className: "text-sm font-extrabold text-red-700 flex items-center gap-2" }, "🚨 Subscription Expired"),
+              React.createElement("p", { className: "text-[11px] text-red-800 mt-0.5" }, `Your plan expired on ${restaurant.dueDate}. Renew to unlock editing.`)),
+            React.createElement("button", { onClick: () => alert("Renewal request submitted!"),
+              className: "px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-sm" }, "Renew Plan"))
+        : React.createElement("div", { className: "p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-3" },
+            React.createElement("div", null,
+              React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded" }, "Active Plan"),
+              React.createElement("h3", { className: "text-sm font-extrabold text-emerald-900 mt-1.5" }, `Active until ${restaurant.dueDate}`),
+              React.createElement("p", { className: "text-[11px] text-emerald-700 mt-0.5" }, daysLeft > 0 ? `${daysLeft} days remaining` : "Expires today")),
+            React.createElement("button", { onClick: () => alert("Plan is active."),
+              className: "px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold" }, "Extend Plan"))
+    ),
+    isExpired
+      ? React.createElement("div", { className: "p-12 text-center bg-stone-100 rounded-3xl border border-stone-300" },
+          React.createElement("span", { className: "text-4xl block" }, "🔒"),
+          React.createElement("h3", { className: "font-display text-lg font-bold text-stone-800 mt-3" }, "Dashboard Locked"),
+          React.createElement("p", { className: "text-xs text-stone-500 max-w-sm mx-auto mt-1" }, "Renew your subscription to edit your menu and view orders."))
+      : React.createElement(
+          "div",
+          { className: "space-y-4" },
+          React.createElement("div", { className: "flex justify-between items-center" },
+            React.createElement("div", null,
+              React.createElement("h2", { className: "font-display text-lg font-extrabold text-stone-900" }, "Menu Catalog"),
+              React.createElement("p", { className: "text-[11px] text-stone-500 mt-0.5" }, `${menuItems.length} dishes • Live synced`)),
+            React.createElement("button", { onClick: () => setShowAddModal(true),
+              className: "px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors active:scale-[0.98]" }, "+ Add Dish")),
+          loading
+            ? React.createElement("div", { className: "py-12 text-center text-xs text-stone-500" }, "Loading menu items...")
+            : menuItems.length === 0
+            ? React.createElement("div", { className: "p-12 text-center bg-white rounded-3xl border-2 border-dashed border-stone-300 space-y-2" },
+                React.createElement("span", { className: "text-4xl block" }, "🍲"),
+                React.createElement("p", { className: "font-display font-bold text-sm text-stone-700" }, "No menu items yet"),
+                React.createElement("p", { className: "text-xs text-stone-500" }, "Click '+ Add Dish' above to create your first item."))
+            : React.createElement(
+                "div",
+                { className: "grid grid-cols-1 md:grid-cols-2 gap-3.5" },
+                menuItems.map((item) => {
+                  const isAvailable = item.available !== false;
+                  return React.createElement(
+                    "div",
+                    { key: item.id, className: "bg-white rounded-2xl p-3 border border-stone-200/80 shadow-soft flex gap-3 items-center relative overflow-hidden hover:shadow-card transition-shadow" },
+                    !isAvailable && React.createElement("div", { className: "absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm z-10" }, "Hidden"),
+                    React.createElement("img", { src: item.image || item.imageUrl, alt: item.name,
+                      className: `w-[72px] h-[72px] rounded-xl object-cover bg-stone-100 shrink-0 ${!isAvailable ? 'grayscale opacity-60' : ''}`,
+                      onError: (e) => { e.target.src = "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80"; } }),
+                    React.createElement("div", { className: "flex-1 min-w-0" },
+                      React.createElement("div", { className: "flex justify-between items-start gap-2" },
+                        React.createElement("h4", { className: "font-display font-bold text-[13px] text-stone-900 truncate" }, item.name),
+                        React.createElement("span", { className: "font-extrabold text-amber-700 text-[13px] font-mono shrink-0" }, `₹${Number(item.price).toFixed(0)}`)),
+                      React.createElement("p", { className: "text-[10px] text-stone-400 mt-0.5 font-medium uppercase tracking-wider" }, item.category),
+                      React.createElement("p", { className: "text-[11px] text-stone-500 line-clamp-1 mt-0.5" }, item.description),
+                      React.createElement("div", { className: "mt-2 pt-2 border-t border-stone-100 flex justify-between items-center text-xs" },
+                        React.createElement("label", { className: "flex items-center gap-1.5 cursor-pointer text-stone-700 font-bold select-none text-[10.5px]" },
+                          React.createElement("input", { type: "checkbox", checked: isAvailable,
+                            onChange: () => handleToggleAvailability(item.id, isAvailable),
+                            className: "rounded border-stone-300 text-amber-600 focus:ring-amber-500 w-3.5 h-3.5" }),
+                          "Show on Menu"),
+                        React.createElement("button", { onClick: () => handleDeleteItem(item.id),
+                          className: "text-[10.5px] text-red-500 hover:text-red-700 font-bold" }, "Delete"))
+                    )
+                  );
+                })
+              )
+        ),
+    showAddModal && React.createElement(
+      "div",
+      { className: "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" },
+      React.createElement(
+        "form",
+        { onSubmit: handleAddItem, className: "bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-3.5 max-h-[90vh] overflow-y-auto animate-zoom-in" },
+        React.createElement("div", { className: "pb-2 border-b border-stone-100" },
+          React.createElement("h3", { className: "font-display text-base font-extrabold text-stone-900" }, "Add New Dish"),
+          React.createElement("p", { className: "text-[11px] text-stone-500 mt-0.5" }, `To ${restaurant.name}`)),
+        React.createElement("div", null,
+          React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Dish Name"),
+          React.createElement("input", { required: true, type: "text", value: newItem.name,
+            onChange: (e) => setNewItem({ ...newItem, name: e.target.value }),
+            className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400",
+            placeholder: "e.g. Masala Dosa, Cold Coffee" })),
+        React.createElement("div", { className: "grid grid-cols-2 gap-3" },
+          React.createElement("div", null,
+            React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Price (₹)"),
+            React.createElement("input", { required: true, type: "number", step: "0.01", value: newItem.price,
+              onChange: (e) => setNewItem({ ...newItem, price: e.target.value }),
+              className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400",
+              placeholder: "199" })),
+          React.createElement("div", null,
+            React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Type"),
+            React.createElement("select", { value: newItem.type,
+              onChange: (e) => setNewItem({ ...newItem, type: e.target.value }),
+              className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400" },
+              React.createElement("option", { value: "Veg" }, "Veg"),
+              React.createElement("option", { value: "Non-Veg" }, "Non-Veg")))
+        ),
+        React.createElement("div", null,
+          React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Category"),
+          React.createElement("select", { value: newItem.category,
+            onChange: (e) => setNewItem({ ...newItem, category: e.target.value }),
+            className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400" },
+            ["Mains", "Snacks", "Drinks", "Ice Cream", "Desserts"].map((c) =>
+              React.createElement("option", { key: c, value: c }, c)))),
+        React.createElement("div", null,
+          React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Image URL"),
+          React.createElement("input", { type: "url", value: newItem.image,
+            onChange: (e) => setNewItem({ ...newItem, image: e.target.value }),
+            className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400",
+            placeholder: "https://images.unsplash.com/..." })),
+        React.createElement("div", null,
+          React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Description"),
+          React.createElement("textarea", { value: newItem.description,
+            onChange: (e) => setNewItem({ ...newItem, description: e.target.value }),
+            className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-xl p-2.5 mt-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 resize-none",
+            rows: "2", placeholder: "Fresh ingredients, chef notes..." })),
+        React.createElement("label", { className: "flex items-center gap-2 text-xs text-stone-700 font-medium cursor-pointer" },
+          React.createElement("input", { type: "checkbox", checked: newItem.isSpecial,
+            onChange: (e) => setNewItem({ ...newItem, isSpecial: e.target.checked }),
+            className: "rounded border-stone-300 text-amber-600 focus:ring-amber-500" }),
+          "Mark as Chef's Special"),
+        React.createElement("div", { className: "flex justify-end gap-2 pt-2 border-t border-stone-100" },
+          React.createElement("button", { type: "button", onClick: () => setShowAddModal(false),
+            className: "px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold transition-colors" }, "Cancel"),
+          React.createElement("button", { type: "submit",
+            className: "px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors" }, "Save Dish"))
+      )
+    ),
+    showQrModal && React.createElement(TableQrGeneratorModal, {
+      currentRestId: targetRestId, currentTable: 5, restaurantName: restaurant.name,
+      onClose: () => setShowQrModal(false)
+    })
+  );
 }
 
-// ==========================================
-// SUPER ADMIN
-// ==========================================
+// ============ SUPER ADMIN DASHBOARD ============
 function SuperAdminDashboard({ restaurants, onRenew, onAddRestaurant, onLogout, setRestaurants }) {
   const [activeTab, setActiveTab] = useState("restaurants");
   const [restaurantName, setRestaurantName] = useState("");
@@ -1072,299 +1222,467 @@ function SuperAdminDashboard({ restaurants, onRenew, onAddRestaurant, onLogout, 
   const [copiedField, setCopiedField] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleCopy = (text, field) => { if (navigator?.clipboard) navigator.clipboard.writeText(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2500); };
-  const handleDeleteRestaurant = async (id, name) => {
-    if (!confirm(`Delete "${name}" (${id})?`)) return;
-    setRestaurants(prev => prev.filter(r => r.id !== id));
-    if (isFirebaseAvailable && db) { try { await deleteDoc(doc(db, "restaurants", id)); } catch (e) { console.warn(e); } }
+  const handleCopy = (text, fieldName) => {
+    if (navigator && navigator.clipboard) navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2500);
   };
-  const handleChangePin = async (id, name) => {
-    const o = String(Math.floor(100000 + Math.random() * 900000));
-    let k = String(Math.floor(100000 + Math.random() * 900000));
-    while (k === o) k = String(Math.floor(100000 + Math.random() * 900000));
-    setRestaurants(prev => prev.map(r => r.id === id ? { ...r, ownerPin: o, kitchenPin: k } : r));
-    if (isFirebaseAvailable && db) { try { await updateDoc(doc(db, "restaurants", id), { ownerPin: o, kitchenPin: k }); } catch (e) { console.warn(e); } }
-    alert(`New PINs for ${name}:\nOwner: ${o}\nKitchen: ${k}`);
+
+  const handleDeleteRestaurant = async (restId, restName) => {
+    if (!window.confirm(`Permanently delete "${restName}" (${restId})?`)) return;
+    setRestaurants((prev) => prev.filter((r) => r.id !== restId));
+    if (isFirebaseAvailable && db) {
+      try { await deleteDoc(doc(db, "restaurants", restId)); }
+      catch (err) { console.warn("[SuperAdmin] delete:", err); }
+    }
   };
-  const handleToggleStatus = async (id, curr) => {
-    const next = curr === "ACTIVE" ? "EXPIRED" : "ACTIVE";
-    setRestaurants(prev => prev.map(r => r.id === id ? { ...r, subscriptionStatus: next } : r));
-    if (isFirebaseAvailable && db) { try { await updateDoc(doc(db, "restaurants", id), { subscriptionStatus: next }); } catch (e) { console.warn(e); } }
+
+  const handleChangePin = async (restId, restName) => {
+    const newOwnerPin = String(Math.floor(100000 + Math.random() * 900000));
+    let newKitchenPin = String(Math.floor(100000 + Math.random() * 900000));
+    while (newKitchenPin === newOwnerPin) newKitchenPin = String(Math.floor(100000 + Math.random() * 900000));
+    setRestaurants((prev) => prev.map((r) => r.id === restId ? { ...r, ownerPin: newOwnerPin, kitchenPin: newKitchenPin } : r));
+    if (isFirebaseAvailable && db) {
+      try { await updateDoc(doc(db, "restaurants", restId), { ownerPin: newOwnerPin, kitchenPin: newKitchenPin }); }
+      catch (err) { console.warn("[SuperAdmin] update PINs:", err); }
+    }
+    alert(`New PINs for ${restName}:\nOwner: ${newOwnerPin}\nKitchen: ${newKitchenPin}`);
+  };
+
+  const handleToggleStatus = async (restId, currentStatus) => {
+    const newStatus = currentStatus === "ACTIVE" ? "EXPIRED" : "ACTIVE";
+    setRestaurants((prev) => prev.map((r) => r.id === restId ? { ...r, subscriptionStatus: newStatus } : r));
+    if (isFirebaseAvailable && db) {
+      try { await updateDoc(doc(db, "restaurants", restId), { subscriptionStatus: newStatus }); }
+      catch (err) { console.warn("[SuperAdmin] toggle:", err); }
+    }
   };
 
   const handleGeneratePins = async (e) => {
     if (e) e.preventDefault();
-    const name = restaurantName.trim();
-    if (!name) { setErrorMsg("Enter restaurant name"); return; }
+    const trimmedName = restaurantName.trim();
+    if (!trimmedName) { setErrorMsg("Please enter a valid Restaurant Name"); return; }
     setErrorMsg(""); setIsGenerating(true);
+
     try {
-      const op = String(Math.floor(100000 + Math.random() * 900000));
-      let kp = String(Math.floor(100000 + Math.random() * 900000));
-      while (kp === op) kp = String(Math.floor(100000 + Math.random() * 900000));
-      const due = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-      const payload = { name, ownerPin: op, kitchenPin: kp, subscriptionStatus: "ACTIVE", dueDate: due, isKitchenOpen: true, createdAt: new Date().toISOString() };
+      const genOwnerPin = String(Math.floor(100000 + Math.random() * 900000));
+      let genKitchenPin = String(Math.floor(100000 + Math.random() * 900000));
+      while (genKitchenPin === genOwnerPin) genKitchenPin = String(Math.floor(100000 + Math.random() * 900000));
+      const dueDateStr = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      const docPayload = { name: trimmedName, ownerPin: genOwnerPin, kitchenPin: genKitchenPin,
+        subscriptionStatus: "ACTIVE", dueDate: dueDateStr, isKitchenOpen: true, createdAt: new Date().toISOString() };
+
       let newId = null;
       if (isFirebaseAvailable && db) {
-        try { const ref = await addDoc(collection(db, "restaurants"), payload); newId = ref.id; } catch (e) { console.warn(e); }
+        try {
+          const docRef = await addDoc(collection(db, "restaurants"), docPayload);
+          newId = docRef.id;
+        } catch (fsErr) { console.warn("[SuperAdmin] addDoc:", fsErr); }
+      }
+      if (!newId) {
+        try {
+          const restRes = await fetch("https://firestore.googleapis.com/v1/projects/menu-qr-b8765/databases/(default)/documents/restaurants", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields: {
+              name: { stringValue: docPayload.name }, ownerPin: { stringValue: docPayload.ownerPin },
+              kitchenPin: { stringValue: docPayload.kitchenPin }, subscriptionStatus: { stringValue: docPayload.subscriptionStatus },
+              dueDate: { stringValue: docPayload.dueDate }, isKitchenOpen: { booleanValue: true },
+              createdAt: { stringValue: docPayload.createdAt } } })
+          });
+          if (restRes.ok) { const data = await restRes.json(); newId = data.name.split("/").pop(); }
+        } catch (restErr) { console.warn("[SuperAdmin] REST:", restErr); }
       }
       if (!newId) newId = "rest-" + Date.now().toString().slice(-6);
-      const created = { id: newId, ...payload };
-      onAddRestaurant?.(created);
+      const created = { id: newId, ...docPayload };
+      if (onAddRestaurant) onAddRestaurant(created);
       setGeneratedResult(created);
       setRestaurantName("");
-    } catch (err) { setErrorMsg("Failed. Try again."); }
+    } catch (err) { setErrorMsg("Failed to add restaurant. Please try again."); }
     finally { setIsGenerating(false); }
   };
 
-  const activeC = restaurants.filter(r => r.subscriptionStatus === "ACTIVE").length;
-  const expC = restaurants.filter(r => r.subscriptionStatus === "EXPIRED").length;
+  const activeTenantsCount = restaurants.filter((r) => r.subscriptionStatus === "ACTIVE").length;
+  const expiredTenantsCount = restaurants.filter((r) => r.subscriptionStatus === "EXPIRED").length;
 
-  return html`
-    <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-screen font-sans">
-      <header className="flex flex-wrap justify-between items-center pb-4 border-b border-stone-200 mb-5 gap-3">
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Super Admin</span>
-          <h1 className="text-lg font-black text-stone-900 mt-1">SaaS Manager</h1>
-        </div>
-        <button onClick=${onLogout} className="px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 text-xs font-bold">Exit</button>
-      </header>
-
-      <div className="flex border-b border-stone-200 mb-5 gap-1">
-        <button onClick=${() => setActiveTab("restaurants")} className=${`pb-2.5 px-3 font-bold text-xs flex items-center gap-1.5 border-b-2 ${activeTab === "restaurants" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500"}`}>
-          🏪 Restaurants <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-100 font-black">${restaurants.length}</span>
-        </button>
-        <button onClick=${() => setActiveTab("pingenerator")} className=${`pb-2.5 px-3 font-bold text-xs flex items-center gap-1.5 border-b-2 ${activeTab === "pingenerator" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500"}`}>
-          🔑 PIN Gen
-        </button>
-      </div>
-
-      ${activeTab === "restaurants" && html`
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm">
-              <span className="text-[10px] text-stone-500 font-semibold">Total</span>
-              <p className="text-xl font-black text-stone-900 mt-0.5">${restaurants.length}</p>
-            </div>
-            <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 shadow-sm">
-              <span className="text-[10px] text-emerald-700 font-semibold">Active</span>
-              <p className="text-xl font-black text-emerald-800 mt-0.5">${activeC}</p>
-            </div>
-            <div className="bg-red-50 p-3 rounded-2xl border border-red-200 shadow-sm">
-              <span className="text-[10px] text-red-700 font-semibold">Expired</span>
-              <p className="text-xl font-black text-red-800 mt-0.5">${expC}</p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-            <div className="p-3.5 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
-              <h3 className="font-black text-sm text-stone-800">Tenants</h3>
-              <button onClick=${() => setActiveTab("pingenerator")} className="px-2.5 py-1 bg-purple-600 text-white rounded-lg text-[10px] font-bold">+ Add</button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-stone-100 text-stone-600 uppercase font-bold tracking-wider text-[10px]">
-                  <tr>${["Restaurant", "PINs", "Status", "Due", "Days", "Actions"].map(h => html`<th key=${h} className="p-2.5">${h}</th>`)}</tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  ${restaurants.map(rest => {
-                    const isExp = rest.subscriptionStatus === "EXPIRED";
-                    const days = getDaysRemaining(rest.dueDate);
-                    return html`
-                      <tr key=${rest.id} className="hover:bg-stone-50/50">
-                        <td className="p-2.5">
-                          <div className="text-xs font-black text-stone-900">${rest.name}</div>
-                          <div className="text-[9px] text-stone-400 font-mono">${rest.id}</div>
-                        </td>
-                        <td className="p-2.5">
-                          <div className="space-y-0.5 font-mono text-[10px]">
-                            <div><span className="text-amber-700 font-bold">O:</span> ${rest.ownerPin || "111111"}</div>
-                            <div><span className="text-blue-700 font-bold">K:</span> ${rest.kitchenPin || "222222"}</div>
-                          </div>
-                        </td>
-                        <td className="p-2.5">
-                          ${isExp 
-                            ? html`<span className="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-black text-[9px]">EXPIRED</span>` 
-                            : html`<span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[9px]">ACTIVE</span>`}
-                        </td>
-                        <td className="p-2.5 font-mono text-[10px] text-stone-700">${rest.dueDate}</td>
-                        <td className="p-2.5 text-[10px]">
-                          ${isExp ? html`<span className="text-red-600 font-bold">Past</span>` : html`<span className="text-emerald-700 font-bold">${days}d</span>`}
-                        </td>
-                        <td className="p-2.5">
-                          <div className="flex items-center gap-1">
-                            <button onClick=${() => onRenew(rest.id)} className="px-2 py-0.5 rounded bg-indigo-600 text-white font-bold text-[9px]">Renew</button>
-                            <button onClick=${() => handleChangePin(rest.id, rest.name)} className="px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 font-bold text-[9px]">PIN</button>
-                            <button onClick=${() => handleDeleteRestaurant(rest.id, rest.name)} className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 text-[9px]">🗑</button>
-                          </div>
-                        </td>
-                      </tr>
-                    `;
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `}
-
-      ${activeTab === "pingenerator" && html`
-        <div className="space-y-4 max-w-lg mx-auto">
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 space-y-4">
-            <div>
-              <span className="text-[9px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded">New Tenant</span>
-              <h2 className="text-base font-black text-stone-900 mt-1.5">Generate PINs</h2>
-              <p className="text-[11px] text-stone-500 mt-0.5">Create restaurant with 30-day subscription</p>
-            </div>
-            <form onSubmit=${handleGeneratePins} className="space-y-3">
-              <input type="text" required value=${restaurantName} onInput=${e => { setRestaurantName(e.target.value); if (errorMsg) setErrorMsg(""); }} placeholder="Restaurant name" className="w-full text-sm bg-stone-50 border border-stone-200 rounded-2xl p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium" />
-              ${errorMsg && html`<p className="text-[11px] font-bold text-red-600">${errorMsg}</p>`}
-              <button type="submit" disabled=${isGenerating || !restaurantName.trim()} className="w-full py-3 bg-purple-600 disabled:bg-stone-300 text-white font-black text-xs rounded-2xl shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
-                ${isGenerating ? html`<span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Saving...` : "Generate & Create"}
-              </button>
-            </form>
-          </div>
-
-          ${generatedResult && html`
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl border-2 border-emerald-400 p-5 shadow-lg space-y-3 anim-slide-up">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm">✓</div>
-                <div>
-                  <span className="text-[9px] font-black uppercase text-emerald-800 bg-emerald-200 px-1.5 py-0.5 rounded">Created</span>
-                  <h3 className="text-sm font-black text-emerald-950 mt-0.5">${generatedResult.name}</h3>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white rounded-xl p-2.5 border border-emerald-200">
-                  <span className="text-[9px] font-bold uppercase text-amber-800">Owner PIN</span>
-                  <div className="text-lg font-mono font-black text-stone-900 tracking-widest my-0.5">${generatedResult.ownerPin}</div>
-                  <button onClick=${() => handleCopy(generatedResult.ownerPin, "o")} className="w-full text-[10px] py-1 bg-amber-50 text-amber-900 font-bold rounded-lg">${copiedField === "o" ? "✓" : "Copy"}</button>
-                </div>
-                <div className="bg-white rounded-xl p-2.5 border border-emerald-200">
-                  <span className="text-[9px] font-bold uppercase text-blue-800">Kitchen PIN</span>
-                  <div className="text-lg font-mono font-black text-stone-900 tracking-widest my-0.5">${generatedResult.kitchenPin}</div>
-                  <button onClick=${() => handleCopy(generatedResult.kitchenPin, "k")} className="w-full text-[10px] py-1 bg-blue-50 text-blue-900 font-bold rounded-lg">${copiedField === "k" ? "✓" : "Copy"}</button>
-                </div>
-              </div>
-              <button onClick=${() => setActiveTab("restaurants")} className="w-full py-2 bg-emerald-700 text-white font-bold text-xs rounded-xl">View in Restaurants →</button>
-            </div>
-          `}
-        </div>
-      `}
-    </div>
-  `;
+  return React.createElement(
+    "div",
+    { className: "max-w-5xl mx-auto p-4 md:p-6 min-h-screen font-sans" },
+    React.createElement(
+      "header",
+      { className: "flex flex-wrap justify-between items-center pb-5 border-b border-stone-200/80 mb-6 gap-3" },
+      React.createElement("div", null,
+        React.createElement("div", { className: "flex items-center gap-2 mb-1" },
+          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md" }, "Super Admin"),
+          React.createElement("span", { className: "text-[11px] text-stone-500 font-medium" }, "MyQRMenu Platform")),
+        React.createElement("h1", { className: "font-display text-2xl font-extrabold text-stone-900 tracking-tight" }, "Tenant Manager")),
+      React.createElement("button", { onClick: onLogout,
+        className: "px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors" }, "Exit Admin")
+    ),
+    React.createElement(
+      "div",
+      { className: "flex border-b border-stone-200/80 mb-6 gap-1" },
+      React.createElement("button", { onClick: () => setActiveTab("restaurants"),
+        className: `pb-3 px-4 font-bold text-sm transition-all flex items-center gap-2 border-b-2 ${
+          activeTab === "restaurants" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500 hover:text-stone-800"
+        }` },
+        React.createElement("span", null, "🏪"),
+        React.createElement("span", null, "Restaurants"),
+        React.createElement("span", { className: `text-[10px] px-1.5 py-0.5 rounded-full font-black ${activeTab === "restaurants" ? "bg-purple-100 text-purple-800" : "bg-stone-100 text-stone-600"}` }, restaurants.length)),
+      React.createElement("button", { onClick: () => setActiveTab("pingenerator"),
+        className: `pb-3 px-4 font-bold text-sm transition-all flex items-center gap-2 border-b-2 ${
+          activeTab === "pingenerator" ? "border-purple-600 text-purple-700" : "border-transparent text-stone-500 hover:text-stone-800"
+        }` },
+        React.createElement("span", null, "🔑"),
+        React.createElement("span", null, "PIN Generator"),
+        React.createElement("span", { className: "text-[9px] uppercase font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded" }, "New"))
+    ),
+    activeTab === "restaurants" && React.createElement(
+      "div",
+      { className: "space-y-6" },
+      React.createElement(
+        "div",
+        { className: "grid grid-cols-3 gap-3" },
+        React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-stone-200/80 shadow-soft" },
+          React.createElement("span", { className: "text-[11px] text-stone-500 font-semibold uppercase tracking-wider" }, "Total"),
+          React.createElement("p", { className: "text-2xl font-extrabold text-stone-900 mt-1" }, restaurants.length)),
+        React.createElement("div", { className: "bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/80 shadow-soft" },
+          React.createElement("span", { className: "text-[11px] text-emerald-700 font-semibold uppercase tracking-wider" }, "Active"),
+          React.createElement("p", { className: "text-2xl font-extrabold text-emerald-800 mt-1" }, activeTenantsCount)),
+        React.createElement("div", { className: "bg-red-50/70 p-4 rounded-2xl border border-red-200/80 shadow-soft" },
+          React.createElement("span", { className: "text-[11px] text-red-700 font-semibold uppercase tracking-wider" }, "Expired"),
+          React.createElement("p", { className: "text-2xl font-extrabold text-red-800 mt-1" }, expiredTenantsCount))
+      ),
+      React.createElement(
+        "div",
+        { className: "bg-white rounded-2xl border border-stone-200/80 shadow-soft overflow-hidden" },
+        React.createElement("div", { className: "p-4 border-b border-stone-200/80 bg-stone-50/50 flex flex-wrap justify-between items-center gap-2" },
+          React.createElement("div", null,
+            React.createElement("h3", { className: "font-display font-extrabold text-sm text-stone-800" }, "Registered Tenants"),
+            React.createElement("p", { className: "text-[11px] text-stone-500 mt-0.5" }, "Monitor renewals and activate accounts")),
+          React.createElement("button", { onClick: () => setActiveTab("pingenerator"),
+            className: "px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors" }, "+ Add Restaurant")),
+        React.createElement(
+          "div",
+          { className: "overflow-x-auto" },
+          React.createElement("table", { className: "w-full text-left text-xs" },
+            React.createElement("thead", { className: "bg-stone-50 text-stone-600 uppercase font-bold tracking-wider text-[10px]" },
+              React.createElement("tr", null,
+                React.createElement("th", { className: "p-3.5" }, "Restaurant"),
+                React.createElement("th", { className: "p-3.5" }, "Staff PINs"),
+                React.createElement("th", { className: "p-3.5" }, "Status"),
+                React.createElement("th", { className: "p-3.5" }, "Due Date"),
+                React.createElement("th", { className: "p-3.5" }, "Days"),
+                React.createElement("th", { className: "p-3.5 text-right" }, "Actions"))),
+            React.createElement("tbody", { className: "divide-y divide-stone-100" },
+              restaurants.map((rest) => {
+                const isExp = rest.subscriptionStatus === "EXPIRED";
+                const days = getDaysRemaining(rest.dueDate);
+                return React.createElement("tr", { key: rest.id, className: "hover:bg-stone-50/60 transition-colors" },
+                  React.createElement("td", { className: "p-3.5" },
+                    React.createElement("div", { className: "text-[13px] font-extrabold text-stone-900" }, rest.name),
+                    React.createElement("div", { className: "text-[10px] text-stone-400 font-mono mt-0.5" }, rest.id)),
+                  React.createElement("td", { className: "p-3.5" },
+                    React.createElement("div", { className: "flex flex-col gap-1 font-mono text-[11px]" },
+                      React.createElement("div", { className: "flex items-center gap-1.5" },
+                        React.createElement("span", { className: "text-amber-800 bg-amber-50 px-1 rounded font-bold text-[10px]" }, "OWNER"),
+                        React.createElement("span", { className: "font-bold text-stone-900" }, rest.ownerPin || "111111"),
+                        React.createElement("button", { onClick: () => handleCopy(rest.ownerPin || "111111", `owner_${rest.id}`),
+                          className: "text-stone-400 hover:text-stone-700 text-[10px] ml-0.5" },
+                          copiedField === `owner_${rest.id}` ? "✓" : "📋")),
+                      React.createElement("div", { className: "flex items-center gap-1.5" },
+                        React.createElement("span", { className: "text-blue-800 bg-blue-50 px-1 rounded font-bold text-[10px]" }, "KITCH"),
+                        React.createElement("span", { className: "font-bold text-stone-900" }, rest.kitchenPin || "222222"),
+                        React.createElement("button", { onClick: () => handleCopy(rest.kitchenPin || "222222", `kitchen_${rest.id}`),
+                          className: "text-stone-400 hover:text-stone-700 text-[10px] ml-0.5" },
+                          copiedField === `kitchen_${rest.id}` ? "✓" : "📋")))),
+                  React.createElement("td", { className: "p-3.5" },
+                    isExp
+                      ? React.createElement("span", { className: "px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-black text-[9.5px] uppercase tracking-wider" }, "● Expired")
+                      : React.createElement("span", { className: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[9.5px] uppercase tracking-wider" }, "● Active")),
+                  React.createElement("td", { className: "p-3.5 font-mono text-stone-700 text-[11px]" }, rest.dueDate),
+                  React.createElement("td", { className: "p-3.5" },
+                    isExp
+                      ? React.createElement("span", { className: "text-red-600 font-bold text-[11px]" }, "Past Due")
+                      : React.createElement("span", { className: "text-emerald-700 font-bold text-[11px]" }, `${days}d`)),
+                  React.createElement("td", { className: "p-3.5" },
+                    React.createElement("div", { className: "flex items-center justify-end gap-1.5" },
+                      React.createElement("label", { className: "relative inline-flex items-center cursor-pointer", title: "Toggle Status" },
+                        React.createElement("input", { type: "checkbox", checked: !isExp,
+                          onChange: () => handleToggleStatus(rest.id, rest.subscriptionStatus || "ACTIVE"), className: "sr-only peer" }),
+                        React.createElement("div", { className: "w-7 h-4 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600" })),
+                      React.createElement("button", { onClick: () => onRenew(rest.id),
+                        className: "px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] transition-colors" }, "Renew"),
+                      React.createElement("button", { onClick: () => handleChangePin(rest.id, rest.name),
+                        className: "px-2 py-1 rounded-md bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-[10px] transition-colors" }, "PIN"),
+                      React.createElement("button", { onClick: () => handleDeleteRestaurant(rest.id, rest.name),
+                        className: "p-1 rounded-md bg-red-50 hover:bg-red-100 text-red-600 text-xs transition-colors" }, "🗑️"))));
+              })
+            )
+          )
+        )
+      )
+    ),
+    activeTab === "pingenerator" && React.createElement(
+      "div",
+      { className: "space-y-6 max-w-2xl mx-auto" },
+      React.createElement(
+        "div",
+        { className: "bg-white rounded-3xl border border-stone-200/80 shadow-card p-6 md:p-8 space-y-6" },
+        React.createElement("div", { className: "border-b border-stone-100 pb-4" },
+          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md" }, "Instant Provisioning"),
+          React.createElement("h2", { className: "font-display text-xl font-extrabold text-stone-900 mt-2" }, "Restaurant Onboarding"),
+          React.createElement("p", { className: "text-[11px] text-stone-500 mt-1" }, "Enter a restaurant name to generate secure 6-digit PINs and activate their 30-day subscription.")),
+        React.createElement(
+          "form",
+          { onSubmit: handleGeneratePins, className: "space-y-4" },
+          React.createElement("div", null,
+            React.createElement("label", { className: "block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-2" },
+              "Restaurant Name ", React.createElement("span", { className: "text-red-500" }, "*")),
+            React.createElement("input", { type: "text", required: true, value: restaurantName,
+              onChange: (e) => { setRestaurantName(e.target.value); if (errorMsg) setErrorMsg(""); },
+              placeholder: "e.g. Royal Feast, Spice Haven...",
+              className: "w-full text-sm bg-stone-50 border border-stone-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-400 focus:bg-white font-medium transition-all" }),
+            errorMsg && React.createElement("p", { className: "text-xs font-bold text-red-600 mt-1.5" }, errorMsg)),
+          React.createElement("div", { className: "bg-stone-50 rounded-2xl p-4 border border-stone-100 text-[11px] text-stone-600 space-y-1.5" },
+            React.createElement("p", { className: "font-bold text-stone-700 text-[10.5px] uppercase tracking-wider" }, "What happens:"),
+            React.createElement("ul", { className: "list-disc list-inside space-y-0.5 text-stone-500" },
+              React.createElement("li", null, "Random 6-digit Owner & Kitchen PINs generated"),
+              React.createElement("li", null, "Document saved to ", React.createElement("code", { className: "font-mono bg-white px-1 rounded border border-stone-200 text-[10px]" }, "restaurants"), " collection"),
+              React.createElement("li", null, "Subscription set to ", React.createElement("strong", { className: "text-emerald-700 font-bold" }, "ACTIVE"), " for 30 days"))),
+          React.createElement("button", { type: "submit", disabled: isGenerating || !restaurantName.trim(),
+            className: "w-full py-3.5 bg-purple-600 hover:bg-purple-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]" },
+            isGenerating
+              ? React.createElement("span", { className: "flex items-center gap-2" },
+                  React.createElement("span", { className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" }),
+                  React.createElement("span", null, "Saving..."))
+              : React.createElement("span", null, "Generate & Add Restaurant"))
+        )
+      ),
+      generatedResult && React.createElement(
+        "div",
+        { className: "bg-gradient-to-br from-emerald-50 to-emerald-100/40 rounded-3xl border-2 border-emerald-300 p-6 md:p-8 shadow-card space-y-5 animate-slide-up" },
+        React.createElement("div", { className: "flex items-start justify-between gap-3" },
+          React.createElement("div", { className: "flex items-center gap-3" },
+            React.createElement("div", { className: "w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-emerald-600/30" }, "✓"),
+            React.createElement("div", null,
+              React.createElement("span", { className: "text-[10px] font-black uppercase tracking-[0.14em] text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded" }, "Success"),
+              React.createElement("h3", { className: "font-display text-lg font-extrabold text-emerald-950 mt-1" }, `${generatedResult.name} is Live!`))),
+          React.createElement("span", { className: "text-[10px] font-mono text-emerald-800 bg-white/80 px-2 py-1 rounded-full border border-emerald-300 font-bold" }, generatedResult.id)),
+        React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3" },
+          React.createElement("div", { className: "bg-white rounded-2xl p-4 border border-emerald-200 shadow-sm" },
+            React.createElement("div", { className: "flex justify-between items-center mb-2" },
+              React.createElement("span", { className: "text-[10px] font-bold uppercase tracking-wider text-amber-800" }, "Owner PIN"),
+              React.createElement("span", { className: "text-xs" }, "👑")),
+            React.createElement("div", { className: "text-2xl font-mono font-black text-stone-900 tracking-[0.2em] mb-3" }, generatedResult.ownerPin),
+            React.createElement("button", { onClick: () => handleCopy(generatedResult.ownerPin, "ownerPin_gen"),
+              className: "w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 text-[11px] font-bold rounded-lg border border-amber-200 transition-colors" },
+              copiedField === "ownerPin_gen" ? "✓ Copied!" : "📋 Copy Owner PIN")),
+          React.createElement("div", { className: "bg-white rounded-2xl p-4 border border-emerald-200 shadow-sm" },
+            React.createElement("div", { className: "flex justify-between items-center mb-2" },
+              React.createElement("span", { className: "text-[10px] font-bold uppercase tracking-wider text-blue-800" }, "Kitchen PIN"),
+              React.createElement("span", { className: "text-xs" }, "🍳")),
+            React.createElement("div", { className: "text-2xl font-mono font-black text-stone-900 tracking-[0.2em] mb-3" }, generatedResult.kitchenPin),
+            React.createElement("button", { onClick: () => handleCopy(generatedResult.kitchenPin, "kitchenPin_gen"),
+              className: "w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 text-[11px] font-bold rounded-lg border border-blue-200 transition-colors" },
+              copiedField === "kitchenPin_gen" ? "✓ Copied!" : "📋 Copy Kitchen PIN"))),
+        React.createElement("div", { className: "bg-white/80 rounded-xl p-3 border border-emerald-200 text-[11px] text-emerald-950 flex flex-wrap justify-between items-center gap-2" },
+          React.createElement("div", { className: "flex items-center gap-2" },
+            React.createElement("span", { className: "font-bold" }, "Status:"),
+            React.createElement("span", { className: "px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[9.5px] uppercase tracking-wider" }, "Active")),
+          React.createElement("div", { className: "flex items-center gap-2 font-mono" },
+            React.createElement("span", null, "Due:"),
+            React.createElement("span", { className: "font-bold" }, `${generatedResult.dueDate} (30d)`))),
+        React.createElement("div", { className: "flex flex-col sm:flex-row gap-2 pt-1" },
+          React.createElement("button", { onClick: () => {
+            const fullText = `🎉 Welcome to MyQRMenu!\nRestaurant: ${generatedResult.name}\nID: ${generatedResult.id}\n👑 Owner PIN: ${generatedResult.ownerPin}\n🍳 Kitchen PIN: ${generatedResult.kitchenPin}\n📅 Due: ${generatedResult.dueDate}`;
+            handleCopy(fullText, "all_gen");
+          }, className: "flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition-colors" },
+            copiedField === "all_gen" ? "✓ All Copied!" : "📋 Copy Full Message"),
+          React.createElement("button", { onClick: () => setActiveTab("restaurants"),
+            className: "py-2.5 px-4 bg-white hover:bg-stone-50 text-stone-800 font-bold text-xs rounded-xl border border-emerald-300 transition-colors" }, "View →"))
+      )
+    )
+  );
 }
 
-// ==========================================
-// PIN LOGIN
-// ==========================================
+// ============ PIN LOGIN MODAL ============
 function PinLoginModal({ restaurants, defaultRestId, onSuccess, onCancel }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
-  const handleDigit = (d) => { if (pin.length < 6) { setPin(p => p + d); setError(""); } };
-  const handleDelete = () => { setPin(p => p.slice(0, -1)); setError(""); };
+
+  const handleDigit = (digit) => {
+    if (pin.length < 6) { setPin((prev) => prev + digit); setError(""); }
+  };
+
+  const handleDelete = () => { setPin((prev) => prev.slice(0, -1)); setError(""); };
+
   const handleLogin = (e) => {
     if (e) e.preventDefault();
     if (pin === "999999") { onSuccess({ role: "admin" }); return; }
-    const curr = restaurants.find(r => r.id === defaultRestId);
-    if (curr) {
-      if (curr.ownerPin === pin) { onSuccess({ role: "owner", restaurantId: curr.id }); return; }
-      if (curr.kitchenPin === pin) { onSuccess({ role: "kitchen", restaurantId: curr.id }); return; }
+
+    const currentRest = restaurants.find((r) => r.id === defaultRestId);
+    if (currentRest) {
+      if (currentRest.ownerPin === pin) { onSuccess({ role: "owner", restaurantId: currentRest.id }); return; }
+      if (currentRest.kitchenPin === pin) { onSuccess({ role: "kitchen", restaurantId: currentRest.id }); return; }
     }
-    const o = restaurants.find(r => r.ownerPin === pin);
-    if (o) { onSuccess({ role: "owner", restaurantId: o.id }); return; }
-    const k = restaurants.find(r => r.kitchenPin === pin);
-    if (k) { onSuccess({ role: "kitchen", restaurantId: k.id }); return; }
+    const ownerRest = restaurants.find((r) => r.ownerPin === pin);
+    if (ownerRest) { onSuccess({ role: "owner", restaurantId: ownerRest.id }); return; }
+    const kitchenRest = restaurants.find((r) => r.kitchenPin === pin);
+    if (kitchenRest) { onSuccess({ role: "kitchen", restaurantId: kitchenRest.id }); return; }
     if (pin === "111111") { onSuccess({ role: "owner", restaurantId: "rest-101" }); return; }
     if (pin === "222222") { onSuccess({ role: "kitchen", restaurantId: "rest-101" }); return; }
-    setError("Invalid PIN");
+    setError("Invalid Staff PIN code");
   };
-  
-  return html`
-    <div className="fixed inset-0 z-50 bg-stone-950 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center space-y-4 anim-slide-up">
-        <div className="flex justify-between items-center">
-          <span className="text-xl">🔐</span>
-          <button onClick=${onCancel} className="text-stone-400 text-sm font-bold">✕</button>
-        </div>
-        <div>
-          <h2 className="text-base font-black text-stone-900">Staff Login</h2>
-          <p className="text-[11px] text-stone-500">Enter 6-digit PIN</p>
-        </div>
-        <div className="flex justify-center gap-1.5 my-2">
-          ${[0, 1, 2, 3, 4, 5].map(i => html`
-            <div key=${i} className=${`w-8 h-10 rounded-xl border flex items-center justify-center font-bold text-base font-mono ${pin[i] ? "border-amber-600 bg-amber-50 text-amber-900" : "border-stone-200 bg-stone-50"}`}>
-              ${pin[i] ? "•" : ""}
-            </div>
-          `)}
-        </div>
-        ${error && html`<p className="text-[11px] text-red-600 font-bold">${error}</p>`}
-        <div className="grid grid-cols-3 gap-1.5 pt-1">
-          ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => html`
-            <button key=${n} onClick=${() => handleDigit(n.toString())} className="py-2.5 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-800 font-bold text-base border border-stone-200 active:scale-95 transition-transform">${n}</button>
-          `)}
-          <button onClick=${() => setPin("")} className="py-2.5 rounded-xl bg-stone-50 text-stone-400 font-bold text-[10px]">Clear</button>
-          <button onClick=${() => handleDigit("0")} className="py-2.5 rounded-xl bg-stone-50 text-stone-800 font-bold text-base border border-stone-200">0</button>
-          <button onClick=${handleDelete} className="py-2.5 rounded-xl bg-stone-50 text-stone-600 font-bold text-sm">⌫</button>
-        </div>
-        <button onClick=${handleLogin} disabled=${pin.length < 6} className="w-full py-3 bg-amber-600 disabled:bg-stone-300 text-white rounded-xl font-bold text-xs shadow-sm active:scale-[0.98] transition-transform">Verify</button>
-      </div>
-    </div>
-  `;
+
+  return React.createElement(
+    "div",
+    { className: "fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-md flex items-center justify-center p-4 font-sans animate-fade-in" },
+    React.createElement(
+      "div",
+      { className: "bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center space-y-4 animate-zoom-in" },
+      React.createElement("div", { className: "flex justify-between items-center" },
+        React.createElement("div", { className: "w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center text-sm shadow-md shadow-amber-600/30" }, "🔐"),
+        React.createElement("button", { onClick: onCancel,
+          className: "w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 text-sm font-bold flex items-center justify-center transition-colors" }, "✕")),
+      React.createElement("div", null,
+        React.createElement("h2", { className: "font-display text-lg font-extrabold text-stone-900 tracking-tight" }, "Staff Access"),
+        React.createElement("p", { className: "text-[11px] text-stone-500 mt-1 font-medium" }, "Enter your 6-digit role PIN")),
+      React.createElement(
+        "div",
+        { className: "flex justify-center gap-1.5 my-2" },
+        [0, 1, 2, 3, 4, 5].map((i) => React.createElement("div", {
+          key: i,
+          className: `w-9 h-11 rounded-xl border-2 flex items-center justify-center font-bold text-lg font-mono transition-all ${
+            pin[i] ? "border-amber-500 bg-amber-50 text-amber-900 shadow-sm" : "border-stone-200 bg-stone-50"
+          }`
+        }, pin[i] ? "•" : ""))
+      ),
+      error && React.createElement("p", { className: "text-[11px] text-red-600 font-bold bg-red-50 py-1.5 px-3 rounded-lg border border-red-200" }, "⚠️ " + error),
+      React.createElement(
+        "div",
+        { className: "grid grid-cols-3 gap-2 pt-1" },
+        [1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => React.createElement("button", {
+          key: num, onClick: () => handleDigit(num.toString()),
+          className: "py-3 rounded-xl bg-stone-50 hover:bg-stone-100 active:bg-stone-200 text-stone-800 font-bold text-lg transition-colors border border-stone-200 active:scale-95"
+        }, num)),
+        React.createElement("button", { onClick: () => { setPin(""); setError(""); },
+          className: "py-3 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-400 font-bold text-[10px] uppercase tracking-wider transition-colors active:scale-95" }, "Clear"),
+        React.createElement("button", { onClick: () => handleDigit("0"),
+          className: "py-3 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-800 font-bold text-lg border border-stone-200 transition-colors active:scale-95" }, "0"),
+        React.createElement("button", { onClick: handleDelete,
+          className: "py-3 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold text-sm transition-colors active:scale-95" }, "⌫")
+      ),
+      React.createElement("button", { onClick: handleLogin, disabled: pin.length < 6,
+        className: "w-full py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-amber-600/20 active:scale-[0.98]" }, "Verify PIN →"),
+      React.createElement("p", { className: "text-[9.5px] text-stone-400 pt-1" }, "Tip: 999999 for Super Admin")
+    )
+  );
 }
 
-// ==========================================
-// TABLE QR GENERATOR
-// ==========================================
+// ============ TABLE QR GENERATOR MODAL ============
 function TableQrGeneratorModal({ currentRestId, currentTable, restaurantName, onSelect, onClose }) {
-  const [rest] = useState(currentRestId || "rest-101");
+  const [rest, setRest] = useState(currentRestId || "rest-101");
   const [tbl, setTbl] = useState(currentTable || 5);
   const [customTable, setCustomTable] = useState("");
   const [copied, setCopied] = useState(false);
+
   const activeTable = customTable.trim() ? customTable.trim() : tbl;
-  const base = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://menu.tablebite.app";
-  const url = `${base}/?restId=${encodeURIComponent(rest)}&table=${encodeURIComponent(activeTable)}`;
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=${encodeURIComponent(url)}`;
-  const handleCopy = () => { navigator?.clipboard?.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2500); };
-  
-  return html`
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-3 my-8 anim-slide-up">
-        <div className="flex justify-between items-center pb-2 border-b border-stone-200">
-          <h3 className="font-black text-sm">📱 Table QR</h3>
-          <button onClick=${onClose} className="w-7 h-7 rounded-full bg-stone-100 text-stone-500 text-sm font-bold">✕</button>
-        </div>
-        <div className="grid grid-cols-6 gap-1">
-          ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(t => html`
-            <button key=${t} onClick=${() => { setTbl(t); setCustomTable(""); }} className=${`py-1.5 rounded-lg text-[10px] font-bold border ${!customTable && tbl === t ? "bg-amber-600 text-white border-amber-600" : "bg-stone-50 border-stone-200 text-stone-700"}`}>T-${t}</button>
-          `)}
-        </div>
-        <input type="text" placeholder="Custom table name" value=${customTable} onInput=${e => setCustomTable(e.target.value)} className="w-full text-xs bg-stone-50 border border-stone-200 rounded-xl px-3 py-2" />
-        
-        <div id="printable-qr-stand" className="bg-gradient-to-b from-stone-900 to-black p-4 rounded-2xl text-center text-white shadow-xl space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">${restaurantName || "Restaurant"}</span>
-          <div><span className="inline-block px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-black text-xs uppercase tracking-wider">TABLE ${activeTable}</span></div>
-          <div className="bg-white p-2 rounded-2xl w-40 h-40 mx-auto">
-            <img src=${qr} alt="QR" className="w-full h-full object-contain" />
-          </div>
-          <p className="text-[10px] text-stone-300 font-bold">📷 Scan to view menu</p>
-        </div>
-        
-        <div className="flex gap-1.5">
-          <input type="text" readOnly value=${url} className="flex-1 text-[10px] font-mono bg-stone-50 border border-stone-200 rounded-lg px-2 py-1.5 text-stone-700" />
-          <button onClick=${handleCopy} className=${`px-2.5 py-1.5 rounded-lg text-[10px] font-bold ${copied ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"}`}>${copied ? "✓" : "📋"}</button>
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          <a href=${url} target="_blank" rel="noopener" className="py-2 rounded-lg bg-stone-100 text-stone-800 text-[10px] font-bold text-center">🔗 Preview</a>
-          <button onClick=${() => window.print()} className="py-2 rounded-lg bg-stone-900 text-white text-[10px] font-bold">🖨️ Print</button>
-        </div>
-        ${onSelect && html`<button onClick=${() => { onSelect(rest, activeTable); onClose?.(); }} className="w-full py-2 bg-stone-100 text-stone-700 rounded-lg text-[10px] font-semibold">Apply</button>`}
-      </div>
-    </div>
-  `;
+  const baseUrl = typeof window !== "undefined" && window.location.origin ? window.location.origin : "https://menu.tablebite.app";
+  const cleanTableUrl = `${baseUrl}/?restId=${encodeURIComponent(rest)}&table=${encodeURIComponent(activeTable)}`;
+  const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=${encodeURIComponent(cleanTableUrl)}`;
+
+  const handleCopy = () => {
+    if (navigator && navigator.clipboard) navigator.clipboard.writeText(cleanTableUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handlePrint = () => window.print();
+  const handleApply = () => { if (onSelect) onSelect(rest, activeTable); if (onClose) onClose(); };
+
+  return React.createElement(
+    "div",
+    { className: "fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto font-sans animate-fade-in" },
+    React.createElement(
+      "div",
+      { className: "bg-white rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 my-8 animate-zoom-in" },
+      React.createElement("div", { className: "flex justify-between items-center pb-3 border-b border-stone-200/80" },
+        React.createElement("div", null,
+          React.createElement("h3", { className: "font-display font-extrabold text-base text-stone-900 flex items-center gap-2 tracking-tight" },
+            React.createElement("span", null, "📱"),
+            React.createElement("span", null, "QR Stand Generator")),
+          React.createElement("p", { className: "text-[10.5px] text-stone-500 mt-0.5" }, "Production URLs for physical tables")),
+        React.createElement("button", { onClick: onClose,
+          className: "w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 text-sm font-bold flex items-center justify-center transition-colors" }, "✕")),
+      React.createElement(
+        "div",
+        { className: "space-y-2" },
+        React.createElement("div", { className: "flex justify-between items-center" },
+          React.createElement("label", { className: "text-[10px] font-bold text-stone-700 uppercase tracking-wider" }, "Table Number"),
+          React.createElement("span", { className: "text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60" }, `Active: ${activeTable}`)),
+        React.createElement(
+          "div",
+          { className: "grid grid-cols-6 gap-1.5" },
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((t) => React.createElement("button", {
+            key: t, type: "button",
+            onClick: () => { setTbl(t); setCustomTable(""); },
+            className: `py-1.5 rounded-lg text-[11px] font-bold border transition-all active:scale-95 ${
+              !customTable && tbl === t
+                ? "bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-600/20"
+                : "bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100"
+            }`
+          }, `T-${t}`))
+        ),
+        React.createElement("input", {
+          type: "text", placeholder: "Or custom (e.g. Patio 3, Bar 2)",
+          value: customTable, onChange: (e) => setCustomTable(e.target.value),
+          className: "w-full text-xs bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 transition-all"
+        })
+      ),
+      React.createElement(
+        "div",
+        { id: "printable-qr-stand", className: "bg-gradient-to-b from-stone-900 via-stone-900 to-black p-5 rounded-2xl text-center text-white shadow-xl border border-stone-800 space-y-3" },
+        React.createElement("div", { className: "space-y-1" },
+          React.createElement("span", { className: "text-[10px] font-black uppercase tracking-[0.14em] text-amber-400" }, restaurantName || `Restaurant ${rest}`),
+          React.createElement("div", { className: "inline-block px-4 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-black text-sm uppercase tracking-wider" },
+            `TABLE ${activeTable}`)),
+        React.createElement("div", { className: "bg-white p-3 rounded-2xl w-44 h-44 mx-auto shadow-md flex items-center justify-center" },
+          React.createElement("img", { src: qrCodeImageUrl, alt: `QR for Table ${activeTable}`, className: "w-full h-full object-contain" })),
+        React.createElement("div", { className: "space-y-0.5 text-xs" },
+          React.createElement("p", { className: "font-bold text-stone-200 flex items-center justify-center gap-1.5 text-[11px]" },
+            React.createElement("span", null, "📷"), React.createElement("span", null, "Scan to view menu")),
+          React.createElement("p", { className: "text-[9.5px] text-stone-400" }, "No app needed • Order from your table"))
+      ),
+      React.createElement(
+        "div",
+        { className: "space-y-1" },
+        React.createElement("label", { className: "text-[9.5px] font-bold text-stone-500 uppercase tracking-wider" }, "Clean Table URL"),
+        React.createElement("div", { className: "flex items-center gap-2" },
+          React.createElement("input", { type: "text", readOnly: true, value: cleanTableUrl,
+            className: "flex-1 text-[10.5px] font-mono bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-stone-700 select-all" }),
+          React.createElement("button", { onClick: handleCopy,
+            className: `px-3 py-2 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap shadow-sm active:scale-95 ${
+              copied ? "bg-emerald-600 text-white" : "bg-amber-600 hover:bg-amber-700 text-white"
+            }` }, copied ? "✓ Copied!" : "📋 Copy"))
+      ),
+      React.createElement("div", { className: "grid grid-cols-2 gap-2 pt-1" },
+        React.createElement("a", { href: cleanTableUrl, target: "_blank", rel: "noopener noreferrer",
+          className: "py-2.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-[11px] font-bold text-center border border-stone-200 transition-colors flex items-center justify-center gap-1.5 active:scale-95" },
+          React.createElement("span", null, "🔗"), React.createElement("span", null, "Preview")),
+        React.createElement("button", { onClick: handlePrint,
+          className: "py-2.5 rounded-lg bg-stone-900 hover:bg-black text-white text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95" },
+          React.createElement("span", null, "🖨️"), React.createElement("span", null, "Print"))),
+      onSelect && React.createElement("button", { onClick: handleApply,
+        className: "w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-[11px] font-semibold transition-colors" },
+        `Switch Preview to Table ${activeTable}`)
+    )
+  );
 }
 
+// ============ ROOT RENDER ============
 const container = document.getElementById("root");
-createRoot(container).render(html`<${App} />`);
+const root = createRoot(container);
+root.render(React.createElement(App));
     </script>
   </body>
   </html>
